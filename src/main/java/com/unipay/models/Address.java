@@ -1,6 +1,6 @@
 package com.unipay.models;
 
-import com.universepay.userservice.enums.AddressType;
+import com.unipay.enums.AddressType;
 import jakarta.persistence.*;
 
 @Entity

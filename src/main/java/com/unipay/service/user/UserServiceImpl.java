@@ -21,5 +21,6 @@ public class UserServiceImpl implements UserService{
     public User create(UserRegisterCommand command) {
         command.validate();
         log.info("Begin creating User with payload {}", JSONUtil.toJSON(command));
+        return null;
     }
 }

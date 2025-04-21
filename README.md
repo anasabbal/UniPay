@@ -16,6 +16,9 @@ A robust and scalable monolithic payment gateway API built with **Java Spring Bo
 
 For detailed information about the database entities, please refer to the [MODELS.md](MODELS.md) file, which contains a comprehensive description of the core entities involved in user management, payment processing, and related modules.
 
+## Database Models
+
+For an in-depth understanding of the system architecture and design considerations, please refer to the [system design](resources/system-design.md) file located in the resources folder.
 
 ## Setup
 

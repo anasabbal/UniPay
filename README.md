@@ -51,3 +51,22 @@
 ### Key Flow: Payment Processing
 ![Payment Processing Flow](img/pay-proc.png)
 
+# 📌 Contributing Guide
+
+We follow a **feature-branch workflow** using `develop` as the main development branch.
+
+---
+
+## 🚀 Steps to Contribute
+
+1. **Fork the repository**
+
+2. **Create a branch** using the following naming convention:  
+   `UP-01-description-of-feature`  
+   (Use `UP-02`, `UP-03`, etc. for subsequent features)
+
+3. **Branch from `develop`**:
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b UP-01

@@ -1,6 +1,6 @@
 # Payment Gateway - Monolithic Java Spring Boot
 
-A monolithic payment gateway API like Mollie, built with Java Spring Boot.
+A monolithic payment gateway API
 
 ## Features
 

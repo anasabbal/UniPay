@@ -1,10 +1,5 @@
 # UniPay - Unified Payment Gateway Solution
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/yourusername/unipay/build.yml?branch=main)](https://github.com/yourusername/unipay/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/yourusername/unipay)](https://codecov.io/gh/yourusername/unipay)
-[![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
-[![API Docs](https://img.shields.io/badge/API-Docs-blue)](https://api.unipay.com/docs)
-
 **Enterprise-grade payment processing platform** supporting multiple payment methods and providers through a unified API.
 
 ![UniPay Architecture Diagram](docs/architecture.png)

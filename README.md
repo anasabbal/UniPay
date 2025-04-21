@@ -2,8 +2,6 @@
 
 **Enterprise-grade payment processing platform** supporting multiple payment methods and providers through a unified API.
 
-![UniPay Architecture Diagram](docs/architecture.png)
-
 ## 🌟 Key Features
 
 ### 🚀 Core Payment Processing

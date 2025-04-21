@@ -1,4 +1,6 @@
 package com.unipay.models;
+import com.unipay.command.ProfileCommand;
+import com.unipay.enums.UserGender;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -34,7 +36,10 @@ public class UserProfile extends BaseEntity {
     private String fullName;
     private LocalDate dateOfBirth;
     private String phoneNumber;
-    private String gender;
+
+    @Enumerated(EnumType.STRING)
+    private UserGender gender;
+
     private String nationality;
 
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL)
@@ -42,4 +47,16 @@ public class UserProfile extends BaseEntity {
 
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL)
     private Set<PaymentMethod> paymentMethods;
+
+    public static UserProfile create(final ProfileCommand command){
+        final UserProfile userProfile = new UserProfile();
+
+        userProfile.fullName = command.getFullName();
+        userProfile.dateOfBirth = command.getDateOfBirth();
+        userProfile.phoneNumber = command.getPhoneNumber();
+        userProfile.gender = UserGender.valueOf(command.getGender());
+        userProfile.nationality = command.getNationality();
+
+        return userProfile;
+    }
 }

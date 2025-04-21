@@ -1,5 +1,6 @@
 package com.unipay.models;
 
+import com.unipay.command.UserSettingsCommand;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -31,4 +32,14 @@ public class UserSettings extends BaseEntity {
     private boolean emailNotificationsEnabled;
     private String preferredLanguage;
     private String timezone;
+
+    public static UserSettings create(final UserSettingsCommand command){
+        final UserSettings userSettings = new UserSettings();
+
+        userSettings.preferredLanguage = command.getPreferredLanguage();
+        userSettings.emailNotificationsEnabled = command.isEmailNotificationsEnabled();
+        userSettings.timezone = command.getTimezone();
+
+        return userSettings;
+    }
 }

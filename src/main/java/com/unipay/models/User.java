@@ -1,5 +1,6 @@
 package com.unipay.models;
 
+import com.unipay.command.UserRegisterCommand;
 import com.unipay.enums.UserStatus;
 import jakarta.persistence.*;
 
@@ -60,4 +61,13 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<AuditLog> auditLogs;
+
+    public static User create(final UserRegisterCommand command){
+        final User user = new User();
+
+        user.username = command.getUserName();
+        user.email = command.getEmail();
+
+        return user;
+    }
 }

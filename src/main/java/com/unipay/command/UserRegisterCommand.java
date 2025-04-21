@@ -1,6 +1,7 @@
 package com.unipay.command;
 
 
+import com.unipay.utils.AssertValidation;
 import lombok.Getter;
 
 
@@ -11,4 +12,12 @@ public class UserRegisterCommand {
     private String password;
     private ProfileCommand profileCommand;
     private UserSettingsCommand userSettingsCommand;
+
+    public void validate() {
+        AssertValidation.assertValidFullName(userName);
+        AssertValidation.assertValidPassword(password);
+        AssertValidation.assertValidEmail(email);
+        profileCommand.validate();
+        userSettingsCommand.validate();
+    }
 }

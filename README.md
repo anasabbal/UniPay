@@ -1,36 +1,85 @@
-# UniPay - Unified Payment Gateway Solution
+# Payment Gateway - Monolithic Java Spring Boot
 
-**Enterprise-grade payment processing platform** supporting multiple payment methods and providers through a unified API.
+A monolithic payment gateway API like Mollie, built with Java Spring Boot.
 
-## 🌟 Key Features
+## Features
 
-### 🚀 Core Payment Processing
-- **Multi-provider Integration** (Stripe, PayPal, Adyen, Bank Transfers)
-- **Smart Routing** with fallback mechanisms
-- **Idempotent Requests** (X-Idempotency-Key header)
-- **3D Secure 2.0** Implementation
-- **PCI-DSS Compliant** Card Vaulting
+- User authentication and authorization
+- Merchant onboarding and KYC
+- Payment request and processing
+- Transaction lifecycle management
+- Merchant dashboards
+- Scheduled payouts
+- Notifications and webhooks
 
-### 💼 Merchant Features
-- Merchant onboarding workflow (KYC/KYB)
-- Dynamic API key management
-- Custom webhook configurations
-- Multi-currency settlements (40+ currencies)
-- Virtual Accounts/IBN generation
+## Tech Stack
 
-### 🛡️ Security & Compliance
-- AES-256 + RSA-2048 encryption
-- Tokenization engine (PAN → UUID)
-- Fraud detection rules engine
-- SOC 2 Type II compliant architecture
-- Automated PSD2 compliance checks
+- Java 17
+- Spring Boot 3
+- Spring Security (JWT)
+- Spring Data JPA (PostgreSQL)
+- MapStruct, Lombok
+- Flyway (Database migrations)
 
-### 📊 Advanced Capabilities
-- Real-time reconciliation engine
-- Payment method abstraction layer
-- Smart retry mechanisms for failed transactions
-- Cross-border payment fee calculator
-- Chargeback management system
+## Project Modules
+
+### 1. User Management
+- `/api/auth/register`
+- `/api/auth/login`
+- `/api/users/me`
+
+### 2. Merchant Onboarding
+- `/api/merchant/apply`
+- `/api/merchant/kyc-status`
+
+### 3. Payment Processing
+- `/api/payment/create`
+- `/api/payment/status/{id}`
+- `/api/payment/callback`
+
+### 4. Dashboard
+- `/api/merchant/dashboard`
+- `/api/admin/dashboard`
+
+### 5. Payouts
+- `/api/payout/manual`
+- `/api/payout/schedule`
+
+## Database Schema (Simplified)
+
+- `users(id, email, password, role, verified)`
+- `merchants(id, user_id, business_name, kyc_status)`
+- `transactions(id, merchant_id, amount, status, created_at)`
+- `payouts(id, merchant_id, amount, status, scheduled_for)`
+
+## Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/payment-gateway.git
+cd payment-gateway
+
+# Build the project
+./mvnw clean install
+
+# Run the app
+./mvnw spring-boot:run
+```
+
+## 🚀 Steps to Contribute
+
+1. **Fork the repository**
+
+2. **Create a branch** using the following naming convention:  
+   `UP-01-description-of-feature`  
+   (Use `UP-02`, `UP-03`, etc. for subsequent features)
+
+3. **Branch from `develop`**:
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b UP-01
+```
 
 ## 🛠️ System Architecture
 
@@ -48,25 +97,18 @@
 |                        UniPay Core System                     |
 +---------------------------------------------------------------+
 ```
+
 ### Key Flow: Payment Processing
 ![Payment Processing Flow](img/pay-proc.png)
 
-# 📌 Contributing Guide
+## Contributing
 
-We follow a **feature-branch workflow** using `develop` as the main development branch.
+Open an issue or submit a pull request.
 
----
+## License
 
-## 🚀 Steps to Contribute
+MIT
 
-1. **Fork the repository**
 
-2. **Create a branch** using the following naming convention:  
-   `UP-01-description-of-feature`  
-   (Use `UP-02`, `UP-03`, etc. for subsequent features)
 
-3. **Branch from `develop`**:
-```bash
-git checkout develop
-git pull origin develop
-git checkout -b UP-01
+

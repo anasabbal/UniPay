@@ -1,63 +1,28 @@
 # Payment Gateway - Monolithic Java Spring Boot
 
-A monolithic payment gateway API
+A robust and scalable monolithic payment gateway API built with **Java Spring Boot**.
 
 ## Features
 
-- User authentication and authorization
-- Merchant onboarding and KYC
-- Payment request and processing
-- Transaction lifecycle management
-- Merchant dashboards
-- Scheduled payouts
-- Notifications and webhooks
+- **User Authentication & Authorization**: Secure login and registration using JWT.
+- **Merchant Onboarding & KYC**: Seamless merchant registration with Know-Your-Customer (KYC) checks.
+- **Payment Request & Processing**: Handling payment requests, processing, and status tracking.
+- **Transaction Lifecycle Management**: Full transaction tracking from initiation to completion.
+- **Merchant Dashboards**: Provides merchants with access to real-time transaction data and insights.
+- **Scheduled Payouts**: Supports manual and scheduled payouts to merchants.
+- **Notifications & Webhooks**: Real-time updates via notifications and webhooks.
 
-## Tech Stack
+## Database Models
 
-- Java 17
-- Spring Boot 3
-- Spring Security (JWT)
-- Spring Data JPA (PostgreSQL)
-- MapStruct, Lombok
-- Flyway (Database migrations)
+For detailed information about the database entities, please refer to the [MODELS.md](MODELS.md) file, which contains a comprehensive description of the core entities involved in user management, payment processing, and related modules.
 
-## Project Modules
-
-### 1. User Management
-- `/api/auth/register`
-- `/api/auth/login`
-- `/api/users/me`
-
-### 2. Merchant Onboarding
-- `/api/merchant/apply`
-- `/api/merchant/kyc-status`
-
-### 3. Payment Processing
-- `/api/payment/create`
-- `/api/payment/status/{id}`
-- `/api/payment/callback`
-
-### 4. Dashboard
-- `/api/merchant/dashboard`
-- `/api/admin/dashboard`
-
-### 5. Payouts
-- `/api/payout/manual`
-- `/api/payout/schedule`
-
-## Database Schema (Simplified)
-
-- `users(id, email, password, role, verified)`
-- `merchants(id, user_id, business_name, kyc_status)`
-- `transactions(id, merchant_id, amount, status, created_at)`
-- `payouts(id, merchant_id, amount, status, scheduled_for)`
 
 ## Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/payment-gateway.git
-cd payment-gateway
+git clone https://github.com/anasabbal/UniPay.git
+cd UniPay
 
 # Build the project
 ./mvnw clean install
@@ -104,11 +69,3 @@ git checkout -b UP-01
 ## Contributing
 
 Open an issue or submit a pull request.
-
-## License
-
-MIT
-
-
-
-

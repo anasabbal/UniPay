@@ -4,6 +4,20 @@ import jakarta.persistence.*;
 
 import java.util.Set;
 
+
+
+/**
+ * Represents a role within the system, defining a set of permissions that can be assigned to users.
+ * Roles facilitate role-based access control (RBAC) by grouping permissions and associating them with users.
+ *
+ * <p>Key Fields:
+ * <ul>
+ *   <li><strong>name</strong>: The unique name of the role (e.g., "ADMIN", "USER").</li>
+ *   <li><strong>description</strong>: A brief description of the role's purpose.</li>
+ *   <li><strong>userRoles</strong>: The set of user-role associations linking users to this role.</li>
+ *   <li><strong>permissions</strong>: The set of permissions associated with this role.</li>
+ * </ul>
+ */
 @Entity
 @Table(name = "roles")
 public class Role extends BaseEntity {

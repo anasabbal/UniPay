@@ -5,13 +5,13 @@ spring:
   profiles:
     active: dev, local
 
-    #datasource:
-    #driver-class-name: org.postgresql.Driver
-    #url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/uniPay}
-    #username: ${DATABASE_USER:postgres}
-    #password: ${DATABASE_PASSWORD:postgres}
-    #initialization-mode: never
-    #platform: postgres
+    datasource:
+      driver-class-name: org.postgresql.Driver
+      url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/uniPay}
+      username: ${DATABASE_USER:postgres}
+      password: ${DATABASE_PASSWORD:postgres}
+      initialization-mode: never
+      platform: postgres
 
   jpa:
     properties:

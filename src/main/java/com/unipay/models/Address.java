@@ -3,6 +3,12 @@ package com.unipay.models;
 import com.unipay.enums.AddressType;
 import jakarta.persistence.*;
 
+
+/**
+ * Represents a physical address associated with a user's profile.
+ * Includes details such as street, city, state, zip code, country,
+ * and the type of address (e.g., billing, shipping).
+ */
 @Entity
 @Table(name = "addresses")
 public class Address extends BaseEntity {

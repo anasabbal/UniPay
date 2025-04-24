@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 
@@ -18,12 +21,14 @@ import java.time.LocalDateTime;
  * unauthorized access attempts, and auditing user authentication
  * activities.
  */
+@Getter
+@Setter
 @Entity
 @Table(name = "login_history")
 public class LoginHistory extends BaseEntity {
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     private LocalDateTime loginTimestamp;

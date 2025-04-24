@@ -4,6 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -21,15 +25,17 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "user_roles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserRole extends BaseEntity {
-
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "role_id")
     private Role role;
 
     private LocalDateTime assignedAt;

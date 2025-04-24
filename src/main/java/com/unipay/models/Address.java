@@ -2,6 +2,7 @@ package com.unipay.models;
 
 import com.unipay.enums.AddressType;
 import jakarta.persistence.*;
+import lombok.*;
 
 
 /**
@@ -11,11 +12,11 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "addresses")
+@Getter
+@Setter
 public class Address extends BaseEntity {
-
-
-    @ManyToOne
-    @JoinColumn(name = "user_profile_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_profile_id")
     private UserProfile userProfile;
 
     private String street;
@@ -26,4 +27,5 @@ public class Address extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private AddressType addressType;
+
 }

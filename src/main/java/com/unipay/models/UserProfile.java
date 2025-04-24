@@ -2,6 +2,7 @@ package com.unipay.models;
 import com.unipay.command.ProfileCommand;
 import com.unipay.enums.UserGender;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -26,20 +27,21 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "user_profiles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserProfile extends BaseEntity {
 
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @OneToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     private String fullName;
     private LocalDate dateOfBirth;
     private String phoneNumber;
-
-    @Enumerated(EnumType.STRING)
-    private UserGender gender;
-
+    private String gender;
     private String nationality;
 
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL)
@@ -54,7 +56,7 @@ public class UserProfile extends BaseEntity {
         userProfile.fullName = command.getFullName();
         userProfile.dateOfBirth = command.getDateOfBirth();
         userProfile.phoneNumber = command.getPhoneNumber();
-        userProfile.gender = UserGender.valueOf(command.getGender());
+        userProfile.gender = command.getGender();
         userProfile.nationality = command.getNationality();
 
         return userProfile;

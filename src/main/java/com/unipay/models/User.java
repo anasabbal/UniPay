@@ -3,7 +3,10 @@ package com.unipay.models;
 import com.unipay.command.UserRegisterCommand;
 import com.unipay.enums.UserStatus;
 import jakarta.persistence.*;
-
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 
@@ -29,9 +32,11 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User extends BaseEntity {
-
-
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -42,7 +47,7 @@ public class User extends BaseEntity {
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    private UserStatus status; // ACTIVE, INACTIVE, SUSPENDED
+    private UserStatus status;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserProfile profile;
@@ -62,11 +67,13 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<AuditLog> auditLogs;
 
+
     public static User create(final UserRegisterCommand command){
         final User user = new User();
 
-        user.username = command.getUserName();
+        user.username = command.getUsername();
         user.email = command.getEmail();
+        user.passwordHash = command.getPassword();
 
         return user;
     }

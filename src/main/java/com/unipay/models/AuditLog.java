@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @Table(name = "audit_logs")
 public class AuditLog extends BaseEntity {
 
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

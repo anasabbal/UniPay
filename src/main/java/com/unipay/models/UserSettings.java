@@ -5,7 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 /**
@@ -20,13 +23,18 @@ import jakarta.persistence.Table;
  *   <li><strong>timezone</strong>: Timezone used for scheduling and displaying time-based data.</li>
  * </ul>
  */
+
 @Entity
 @Table(name = "user_settings")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserSettings extends BaseEntity {
 
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @OneToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     private boolean emailNotificationsEnabled;

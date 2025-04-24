@@ -17,6 +17,7 @@ public class ProfileCommand {
 
     public void validate() {
         AssertValidation.assertValidFullName(fullName);
+        AssertValidation.assertValidGender(gender);
         AssertValidation.assertValidDateOfBirth(dateOfBirth);
         AssertValidation.assertValidPhoneNumber(phoneNumber);
     }

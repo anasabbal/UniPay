@@ -1,19 +1,16 @@
 package com.unipay.models;
 
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import jakarta.persistence.*;
-
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.EqualsAndHashCode;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 
 /**

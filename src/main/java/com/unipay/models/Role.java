@@ -1,6 +1,10 @@
 package com.unipay.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 
@@ -20,6 +24,10 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "roles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Role extends BaseEntity {
     private String name;
     private String description;
@@ -35,3 +43,4 @@ public class Role extends BaseEntity {
     )
     private Set<Permission> permissions;
 }
+

@@ -7,17 +7,17 @@ import lombok.Getter;
 
 @Getter
 public class UserRegisterCommand {
-    private String userName;
+    private String username;
     private String email;
     private String password;
-    private ProfileCommand profileCommand;
-    private UserSettingsCommand userSettingsCommand;
+    private ProfileCommand profile;
+    private UserSettingsCommand settings;
 
     public void validate() {
-        AssertValidation.assertValidFullName(userName);
+        AssertValidation.assertValidUsername(username);
         AssertValidation.assertValidPassword(password);
         AssertValidation.assertValidEmail(email);
-        profileCommand.validate();
-        userSettingsCommand.validate();
+        profile.validate();
+        settings.validate();
     }
 }

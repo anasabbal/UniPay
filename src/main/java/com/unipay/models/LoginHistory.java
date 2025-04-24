@@ -4,20 +4,74 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a record of a user's login attempt within the system.
+ * Captures essential details such as the timestamp of the login,
+ * the IP address from which the attempt was made, the user agent
+ * string of the client's browser or application, and whether the
+ * login attempt was successful.
+ *
+ * <p>This entity aids in monitoring user access patterns, detecting
+ * unauthorized access attempts, and auditing user authentication
+ * activities.
+ *
+ * <p>Key Features:
+ * <ul>
+ *   <li><strong>user</strong>: The user who attempted to log in. It is a relationship with the {@link User} entity.</li>
+ *   <li><strong>loginTimestamp</strong>: The timestamp marking when the login attempt occurred.</li>
+ *   <li><strong>ipAddress</strong>: The IP address from which the login attempt was made.</li>
+ *   <li><strong>userAgent</strong>: The user agent string of the client's browser or application.</li>
+ *   <li><strong>successful</strong>: A boolean flag indicating whether the login attempt was successful.</li>
+ * </ul>
+ *
+ * <p>This class helps track login attempts for each user, which is crucial for:
+ * <ul>
+ *   <li>Auditing user login activity.</li>
+ *   <li>Monitoring security and detecting suspicious login attempts.</li>
+ *   <li>Providing historical login data for users.</li>
+ * </ul>
+ *
+ * @see com.unipay.models.User
+ */
+@Getter
+@Setter
 @Entity
 @Table(name = "login_history")
 public class LoginHistory extends BaseEntity {
 
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    /**
+     * The user who attempted to log in. This is a mandatory relationship with the {@link User} entity.
+     */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
+    /**
+     * The timestamp marking when the login attempt occurred.
+     * This value is automatically set when a login record is created.
+     */
     private LocalDateTime loginTimestamp;
+
+    /**
+     * The IP address from which the login attempt was made.
+     * This helps in tracking the location or origin of the login attempt.
+     */
     private String ipAddress;
+
+    /**
+     * The user agent string of the client's browser or application.
+     * This provides information about the client device and software.
+     */
     private String userAgent;
+
+    /**
+     * A boolean flag indicating whether the login attempt was successful.
+     * A value of true means the login attempt succeeded, and false means it failed.
+     */
     private boolean successful;
 }

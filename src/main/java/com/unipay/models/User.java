@@ -1,44 +1,128 @@
 package com.unipay.models;
 
+import com.unipay.command.UserRegisterCommand;
 import com.unipay.enums.UserStatus;
 import jakarta.persistence.*;
-
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 
-
+/**
+ * Represents a user account within the system, encompassing authentication credentials,
+ * profile information, roles, login history, settings, security questions, and audit logs.
+ *
+ * <p>Key Fields:
+ * <ul>
+ *   <li><strong>username</strong>: The unique username for the user.</li>
+ *   <li><strong>email</strong>: The unique email address associated with the user.</li>
+ *   <li><strong>passwordHash</strong>: The hashed password for authentication.</li>
+ *   <li><strong>status</strong>: The current status of the user account (e.g., ACTIVE, INACTIVE, SUSPENDED).</li>
+ *   <li><strong>profile</strong>: The user's profile containing personal information.</li>
+ *   <li><strong>roles</strong>: The set of roles assigned to the user.</li>
+ *   <li><strong>loginHistories</strong>: Records of the user's login attempts.</li>
+ *   <li><strong>settings</strong>: User-specific settings and preferences.</li>
+ *   <li><strong>securityQuestions</strong>: Security questions for account recovery.</li>
+ *   <li><strong>auditLogs</strong>: Logs of actions performed by the user within the system.</li>
+ * </ul>
+ *
+ * <p>This class serves as the central entity for user management, containing all relevant details
+ * about the user’s account, authentication, and associated information. It supports user registration,
+ * login history tracking, and role management, among other features.
+ */
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User extends BaseEntity {
 
-
+    /**
+     * The unique username for the user.
+     * This field is required to be unique to ensure each user has a distinct identifier.
+     */
     @Column(nullable = false, unique = true)
     private String username;
 
+    /**
+     * The unique email address associated with the user.
+     * This field is also unique to ensure there are no duplicate email addresses in the system.
+     */
     @Column(nullable = false, unique = true)
     private String email;
 
+    /**
+     * The hashed password for authentication.
+     * Storing the password in a hashed format ensures it is securely stored and protected.
+     */
     @Column(nullable = false)
     private String passwordHash;
 
+    /**
+     * The current status of the user account.
+     * The status is represented by an enumerated value from {@link UserStatus}.
+     */
     @Enumerated(EnumType.STRING)
-    private UserStatus status; // ACTIVE, INACTIVE, SUSPENDED
+    private UserStatus status;
 
+    /**
+     * The user's profile containing personal information such as name, address, and other details.
+     * This is a one-to-one relationship with the {@link UserProfile} entity.
+     */
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserProfile profile;
 
+    /**
+     * The set of roles assigned to the user.
+     * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<UserRole> roles;
 
+    /**
+     * Records of the user's login attempts.
+     * This is useful for auditing and tracking user login patterns for security purposes.
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<LoginHistory> loginHistories;
 
+    /**
+     * User-specific settings and preferences, such as notification preferences and language settings.
+     * This is a one-to-one relationship with the {@link UserSettings} entity.
+     */
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserSettings settings;
 
+    /**
+     * Security questions associated with the user's account for identity verification.
+     * This is important for account recovery and additional authentication.
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<SecurityQuestion> securityQuestions;
 
+    /**
+     * Logs of actions performed by the user within the system, including administrative actions.
+     * This allows for tracking user activities for security and auditing purposes.
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<AuditLog> auditLogs;
+
+    /**
+     * Creates a new {@link User} instance from the provided {@link UserRegisterCommand}.
+     *
+     * @param command The command containing the user's registration data.
+     * @return A new {@link User} object initialized with the command's values.
+     */
+    public static User create(final UserRegisterCommand command){
+        final User user = new User();
+
+        user.username = command.getUsername();
+        user.email = command.getEmail();
+        user.passwordHash = command.getPassword();
+
+        return user;
+    }
 }

@@ -35,8 +35,8 @@ class UserServiceImplTest {
         UserProfile profile = mock(UserProfile.class);
         UserSettings settings = mock(UserSettings.class);
 
-        when(command.getProfileCommand()).thenReturn(profileCommand);
-        when(command.getUserSettingsCommand()).thenReturn(settingsCommand);
+        when(command.getProfile()).thenReturn(profileCommand);
+        when(command.getSettings()).thenReturn(settingsCommand);
 
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userProfileService.create(profileCommand, user)).thenReturn(profile);

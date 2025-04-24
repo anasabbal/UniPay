@@ -1,8 +1,6 @@
 package com.unipay.utils;
 
 import java.time.LocalDate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Utility class for performing various validation assertions.
@@ -89,5 +87,15 @@ public class AssertValidation {
     public static void assertValidLanguage(String language) {
         assertNonEmptyString(language, 2, "Preferred Language"); // Ensure it's not empty and at least 2 characters long.
     }
+    public static void assertValidUsername(String username) {
+        assertMatchesPattern(username, RegexExpressions.USERNAME, "Username");
+    }
+
+    public static void assertValidGender(String gender) {
+        if (gender == null || !RegexExpressions.GENDERS.contains(gender.toUpperCase())) {
+            throw new IllegalArgumentException("Invalid gender value. Allowed: MALE, FEMALE, OTHER.");
+        }
+    }
+
 }
 

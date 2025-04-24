@@ -1,20 +1,16 @@
 package com.unipay.models;
 
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 import jakarta.persistence.*;
-
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.EqualsAndHashCode;
-
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * BaseEntity serves as a foundational class for all JPA entities, encapsulating common auditing fields.
@@ -52,23 +48,46 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity implements Serializable {
+public abstract class BaseEntity {
 
+    /**
+     * The unique identifier for this entity. This value is auto-generated using the UUID2 strategy.
+     * This serves as the primary key for the entity.
+     */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @Column(name = "ID")
+    @EqualsAndHashCode.Include
+    protected String id;
 
+    /**
+     * The timestamp when the entity was created. This value is automatically set by Spring Data JPA
+     * during the entity's creation.
+     */
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * The timestamp when the entity was last updated. This value is automatically set by Spring Data JPA
+     * whenever the entity is updated.
+     */
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /**
+     * The version number for this entity, used for optimistic locking.
+     * This helps prevent concurrent modification issues.
+     */
     @Version
     private Integer version;
 
+    /**
+     * A boolean flag indicating whether the entity has been logically deleted (soft delete).
+     * This is useful for preserving historical data and marking records as deleted without removing them from the database.
+     */
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 }

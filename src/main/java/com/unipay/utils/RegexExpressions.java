@@ -1,9 +1,17 @@
 package com.unipay.utils;
 
+import java.util.List;
+
 /**
  * Utility class containing common regex expressions used for validation.
  */
 public class RegexExpressions {
+
+    // Username: allows alphanumeric and underscore, 3–20 characters
+    public static final String USERNAME = "^[a-zA-Z0-9_]{3,20}$";
+
+    // Gender: case-insensitive (if needed), or validate via enum
+    public static final List<String> GENDERS = List.of("MALE", "FEMALE", "OTHER");
 
     // Allows alphabetic characters, underscores, and spaces with minimum 2 characters
     public static final String ALPHABETIC_MIN_2_CHARS = "^([A-Za-z_ ]){2,}$";

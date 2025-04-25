@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
+
 /**
  * UserDto is a Data Transfer Object (DTO) used for transferring user-related data
  * between different layers of the application (e.g., from controller to service or between services).
@@ -24,8 +26,7 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class UserDto {
-
+public class UserDto extends BaseEntityDto{
     /**
      * The username of the user. It must be unique and can be used for logging in.
      */
@@ -41,6 +42,16 @@ public class UserDto {
      * for authentication purposes.
      */
     private String passwordHash;
+    /**
+     * Records of the user's login attempts.
+     * This is useful for auditing and tracking user login patterns for security purposes.
+     */
+    private Set<LoginHistoryDto> loginHistories;
+    /**
+     * Logs of actions performed by the user within the system, including administrative actions.
+     * This allows for tracking user activities for security and auditing purposes.
+     */
+    private Set<AuditLogDto> auditLogs;
 
     /**
      * The user's profile information. This includes details like the user's full name,

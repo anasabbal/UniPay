@@ -1,9 +1,13 @@
 package com.unipay.models;
 
+import com.unipay.enums.AuditLogAction;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +19,9 @@ import java.time.LocalDateTime;
  *
  * @see User
  */
+@Setter
 @Entity
+@Getter
 @Table(name = "audit_logs")
 public class AuditLog extends BaseEntity {
 
@@ -46,4 +52,14 @@ public class AuditLog extends BaseEntity {
      * This field captures the exact date and time the action was performed.
      */
     private LocalDateTime timestamp;
+
+    public static AuditLog create(final String action, final String details, final LocalDateTime timestamp){
+        final AuditLog auditLog = new AuditLog();
+
+        auditLog.action = action;
+        auditLog.details = details;
+        auditLog.timestamp = timestamp;
+
+        return auditLog;
+    }
 }

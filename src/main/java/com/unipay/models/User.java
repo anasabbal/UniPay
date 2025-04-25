@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -107,7 +108,7 @@ public class User extends BaseEntity {
      * Logs of actions performed by the user within the system, including administrative actions.
      * This allows for tracking user activities for security and auditing purposes.
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<AuditLog> auditLogs;
 
     /**
@@ -124,5 +125,33 @@ public class User extends BaseEntity {
         user.passwordHash = command.getPassword();
 
         return user;
+    }
+    /**
+     * Adds a login history record to the user's login history.
+     * This method links the provided {@link LoginHistory} to the user.
+     * It also ensures that the login history is correctly associated with the user.
+     *
+     * @param loginHistory The {@link LoginHistory} object to be linked with the user.
+     */
+    public void addLoginHistory(LoginHistory loginHistory) {
+        // Initialize the set if it's null
+        if (this.loginHistories == null) {
+            this.loginHistories = new HashSet<>();
+        }
+        this.loginHistories.add(loginHistory);
+        loginHistory.setUser(this);
+    }
+    /**
+     * Adds an AuditLog entry to the user's audit log history.
+     * This method ensures that the audit log is properly associated with the user and the collection is not null.
+     *
+     * @param auditLog The {@link AuditLog} object to be added to the user's audit logs.
+     */
+    public void addAuditLog(AuditLog auditLog) {
+        if (this.auditLogs == null) {
+            this.auditLogs = new HashSet<>();
+        }
+        this.auditLogs.add(auditLog);
+        auditLog.setUser(this);
     }
 }

@@ -1,19 +1,21 @@
 package com.unipay.controller;
 
 import com.unipay.command.UserRegisterCommand;
+import com.unipay.dto.UserDto;
 import com.unipay.mapper.UserMapper;
+import com.unipay.models.User;
 import com.unipay.response.UserRegistrationResponse;
 import com.unipay.service.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.Optional;
 
 /**
  * UserController is responsible for handling HTTP requests related to user management.
@@ -67,8 +69,47 @@ public class UserController {
             }
     )
     @PostMapping("/register")
-    public ResponseEntity<UserRegistrationResponse> registerUser(@RequestBody UserRegisterCommand command) {
-        userService.create(command);
+    public ResponseEntity<UserRegistrationResponse> registerUser(
+            @RequestBody UserRegisterCommand command, HttpServletRequest request
+    ) {
+        userService.create(command, request);
         return ResponseEntity.ok(new UserRegistrationResponse("User registered successfully"));
+    }
+    /**
+     * Endpoint for retrieving a user by their unique ID.
+     * This method fetches the user from the system using the UserService.
+     *
+     * @param userId The unique identifier of the user.
+     * @return A ResponseEntity containing the UserResponse if the user is found, or an error message.
+     */
+    @Operation(
+            summary = "Get user by ID",
+            description = "Fetches the user with the provided ID",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "User retrieved successfully",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = UserDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "User not found"
+                    )
+            }
+    )
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable String userId) {
+        Optional<User> userOpt = userService.getUserById(userId);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            UserDto userDto = userMapper.toDto(user);
+            return ResponseEntity.ok(userDto);
+        } else {
+            return ResponseEntity.status(404).body(new UserDto());
+        }
     }
 }

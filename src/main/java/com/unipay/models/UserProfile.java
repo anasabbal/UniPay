@@ -66,7 +66,8 @@ public class UserProfile extends BaseEntity {
      * The user's gender identity.
      * This field stores the gender of the user, typically as a string (e.g., "Male", "Female", etc.).
      */
-    private String gender;
+    @Enumerated(EnumType.STRING)
+    private UserGender gender;
 
     /**
      * The user's nationality or country of citizenship.
@@ -102,7 +103,7 @@ public class UserProfile extends BaseEntity {
         userProfile.fullName = command.getFullName();
         userProfile.dateOfBirth = command.getDateOfBirth();
         userProfile.phoneNumber = command.getPhoneNumber();
-        userProfile.gender = command.getGender();
+        userProfile.gender = UserGender.valueOf(command.getGender());
         userProfile.nationality = command.getNationality();
 
         return userProfile;

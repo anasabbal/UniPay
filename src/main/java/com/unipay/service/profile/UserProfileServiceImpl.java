@@ -60,16 +60,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         log.debug("Start creating User profile for user {}", user.getId());
 
         UserProfile userProfile = UserProfile.create(profileCommand);
-        userProfile.setUser(user);
+        userProfile.setUser(user);  // Link the user
 
-        try {
-            userProfile = userProfileRepository.save(userProfile);
-            log.info("User profile created successfully with ID {}", userProfile.getId());
-        } catch (Exception e) {
-            log.error("Error during user profile creation", e);
-            throw e;
-        }
-
+        userProfile = userProfileRepository.save(userProfile);
+        log.info("User profile created successfully with ID {}", userProfile.getId());
         return userProfile;
     }
 }

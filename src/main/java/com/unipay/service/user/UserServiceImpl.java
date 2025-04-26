@@ -5,11 +5,10 @@ import com.unipay.enums.AuditLogAction;
 import com.unipay.enums.RoleName;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
-import com.unipay.models.*;
-import com.unipay.repository.PermissionRepository;
-import com.unipay.repository.RoleRepository;
+import com.unipay.models.User;
+import com.unipay.models.UserProfile;
+import com.unipay.models.UserSettings;
 import com.unipay.repository.UserRepository;
-import com.unipay.repository.UserRoleRepository;
 import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
 import com.unipay.service.profile.UserProfileService;
@@ -57,7 +56,6 @@ public class UserServiceImpl implements UserService {
     private final RoleService roleService;
 
 
-
     /**
      * Creates a new user along with their profile and settings based on the provided command.
      * This method ensures that all related data is persisted atomically using a transactional context.
@@ -83,7 +81,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return user;
     }
-
 
     /**
      * Check if a user already exists by email or username.

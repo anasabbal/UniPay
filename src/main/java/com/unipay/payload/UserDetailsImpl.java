@@ -2,15 +2,14 @@ package com.unipay.payload;
 
 
 import com.unipay.enums.UserStatus;
-import com.unipay.models.*;
+import com.unipay.models.Role;
+import com.unipay.models.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

@@ -8,6 +8,7 @@ import com.unipay.models.User;
 import com.unipay.models.UserProfile;
 import com.unipay.models.UserSettings;
 import com.unipay.repository.UserRepository;
+import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
 import com.unipay.service.profile.UserProfileService;
 import com.unipay.service.settings.UserSettingsService;
@@ -35,84 +36,98 @@ class UserServiceImplTest {
     private LoginHistoryService loginHistoryService;
 
     @Mock
-    private HttpServletRequest request;
+    private AuditLogService auditLogService;
 
     @InjectMocks
     private UserServiceImpl userService;
 
-    private UserRegisterCommand command;
-    private User user;
-    private UserProfile profile;
-    private UserSettings settings;
+    @Mock
+    private HttpServletRequest mockRequest;
+
+    private UserRegisterCommand mockCommand;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        mockCommand = createMockCommand();
+    }
 
-        // Initialize common objects
-        command = mock(UserRegisterCommand.class);
-        user = mock(User.class);
-        profile = mock(UserProfile.class);
-        settings = mock(UserSettings.class);
-
-        // Mock shared behavior
-        when(command.getProfile()).thenReturn(mock(ProfileCommand.class));
-        when(command.getSettings()).thenReturn(mock(UserSettingsCommand.class));
+    private UserRegisterCommand createMockCommand() {
+        UserRegisterCommand command = mock(UserRegisterCommand.class);
+        when(command.getUsername()).thenReturn("testuser");
+        when(command.getEmail()).thenReturn("testuser@example.com");
+        when(command.getProfile()).thenReturn(new ProfileCommand());
+        when(command.getSettings()).thenReturn(new UserSettingsCommand());
+        return command;
     }
 
     @Test
-    void create_shouldCreateUserAndReturnSavedUser() {
+    void testCreateUserSuccess() {
         // Arrange
-        mockUserRepositoryAndServices();
+        User mockUser = mock(User.class);
+        when(userRepository.existsByEmailOrUsername(any(), any())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(mockUser);
+        mockProfileAndSettingsMocks();
 
-        // Simulate that the user already exists
-        when(userRepository.existsByEmailOrUsername(anyString(), anyString())).thenReturn(true);
+        // Act
+        User createdUser = userService.create(mockCommand, mockRequest);
 
-        // Act & Assert
-        BusinessException exception = assertThrows(BusinessException.class, () -> {
-            userService.create(command, request);
-        });
-
-        assertNotNull(exception);
-        assertEquals("user.already.exist", exception.getPayload().getMessage());
-        assertEquals(4, exception.getPayload().getCode());
+        // Assert
+        assertNotNull(createdUser);
+        verifyCreateUserInteractions(mockUser);
     }
 
     @Test
-    void create_shouldThrowExceptionIfUserExists() {
+    void testCreateUserWithExistingEmailOrUsername() {
         // Arrange
-        when(command.getEmail()).thenReturn("existingemail@example.com");
-        when(command.getUsername()).thenReturn("existingUsername");
-        when(userRepository.existsByEmailOrUsername("existingemail@example.com", "existingUsername")).thenReturn(true);
+        when(userRepository.existsByEmailOrUsername(any(), any())).thenReturn(true);
 
         // Act & Assert
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            userService.create(command, request);
+            userService.create(mockCommand, mockRequest);
         });
-
-        assertNotNull(exception.getPayload());
-        assertEquals("user.already.exist", exception.getPayload().getMessage());
-        assertEquals(4, exception.getPayload().getCode());
+        assertEquals("user.already.exists", exception.getMessage());
     }
 
     @Test
-    void create_shouldHandleProfileAndSettingsAssociationErrors() {
+    void testCreateUserThrowsExceptionDuringProfileSettingsAssociation() {
         // Arrange
-        mockUserRepositoryAndServices();
-        when(userProfileService.create(any(), any(User.class))).thenThrow(new RuntimeException("Profile creation failed"));
+        when(userRepository.existsByEmailOrUsername(any(), any())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(mock(User.class));
+        doThrow(new RuntimeException("Error")).when(userProfileService).create(any(), any());
 
         // Act & Assert
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            userService.create(command, request);
+            userService.create(mockCommand, mockRequest);
         });
-
-        assertEquals("technical.error", exception.getPayload().getMessage());
+        assertTrue(exception.getMessage().contains("Error creating and associating user profile/settings"));
     }
 
-    private void mockUserRepositoryAndServices() {
-        // Mock repository and service calls
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        when(userProfileService.create(any(), any(User.class))).thenReturn(profile);
-        when(userSettingsService.create(any(), any(User.class))).thenReturn(settings);
+    @Test
+    void testCreateUserThrowsExceptionDuringAuditLogCreation() {
+        // Arrange
+        when(userRepository.existsByEmailOrUsername(any(), any())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(mock(User.class));
+        mockProfileAndSettingsMocks();
+        doThrow(new RuntimeException("Error")).when(auditLogService).createAuditLog(any(), any(), any());
+
+        // Act & Assert
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            userService.create(mockCommand, mockRequest);
+        });
+        assertTrue(exception.getMessage().contains("Error creating audit log for user"));
+    }
+
+    private void mockProfileAndSettingsMocks() {
+        when(userProfileService.create(any(), any(User.class))).thenReturn(new UserProfile());
+        when(userSettingsService.create(any(), any(User.class))).thenReturn(new UserSettings());
+    }
+
+    private void verifyCreateUserInteractions(User mockUser) {
+        verify(userRepository).save(mockUser);
+        verify(userProfileService).create(any(), eq(mockUser));
+        verify(userSettingsService).create(any(), eq(mockUser));
+        verify(loginHistoryService).createLoginHistory(eq(mockUser), eq(mockRequest), eq(true));
+        verify(auditLogService).createAuditLog(eq(mockUser), anyString(), anyString());
     }
 }

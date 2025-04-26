@@ -63,4 +63,9 @@ public class UserDto extends BaseEntityDto{
      * The user's settings, such as their preferred language, timezone, and notification preferences.
      */
     private UserSettingsDto settings;
+    /**
+     * The set of roles assigned to the user.
+     * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
+     */
+    private Set<UserRoleDto> roles;
 }

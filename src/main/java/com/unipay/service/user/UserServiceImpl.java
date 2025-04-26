@@ -2,18 +2,19 @@ package com.unipay.service.user;
 
 import com.unipay.command.UserRegisterCommand;
 import com.unipay.enums.AuditLogAction;
+import com.unipay.enums.RoleName;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
-import com.unipay.models.LoginHistory;
-import com.unipay.models.User;
-import com.unipay.models.UserProfile;
-import com.unipay.models.UserSettings;
+import com.unipay.models.*;
+import com.unipay.repository.PermissionRepository;
+import com.unipay.repository.RoleRepository;
 import com.unipay.repository.UserRepository;
+import com.unipay.repository.UserRoleRepository;
 import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
 import com.unipay.service.profile.UserProfileService;
+import com.unipay.service.role.RoleService;
 import com.unipay.service.settings.UserSettingsService;
-import com.unipay.utils.JSONUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,9 @@ public class UserServiceImpl implements UserService {
     private final UserSettingsService userSettingsService;
     private final LoginHistoryService loginHistoryService;
     private final AuditLogService auditLogService;
+    private final RoleService roleService;
+
+
 
     /**
      * Creates a new user along with their profile and settings based on the provided command.
@@ -68,7 +72,7 @@ public class UserServiceImpl implements UserService {
         log.debug("Start creating User with username {}", command.getUsername());
         checkIfUserExists(command);
         User user = createUser(command);
-
+        roleService.assignRoleToUser(user, RoleName.USER);
         associateUserProfileAndSettings(user, command);
         logLoginHistory(user, request);
         auditLogCreate(
@@ -79,6 +83,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return user;
     }
+
 
     /**
      * Check if a user already exists by email or username.

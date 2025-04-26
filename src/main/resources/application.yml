@@ -23,6 +23,12 @@ server:
   servlet:
     context-path: /api
 
+# JWT Configuration
+jwt:
+  secret: your-256-bit-base64-encoded-secret-key
+  access-token-expiration: 900000    # 15 minutes
+  refresh-token-expiration: 604800000 # 7 days
+
 # Custom application settings
 application:
   front-url: ${FRONT_URL:http://localhost:3000}

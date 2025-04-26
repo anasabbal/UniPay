@@ -80,7 +80,7 @@ public class User extends BaseEntity {
      * The set of roles assigned to the user.
      * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserRole> roles;
 
     /**
@@ -123,7 +123,6 @@ public class User extends BaseEntity {
         user.username = command.getUsername();
         user.email = command.getEmail();
         user.passwordHash = command.getPassword();
-
         return user;
     }
     /**

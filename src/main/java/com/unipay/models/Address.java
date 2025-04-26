@@ -2,7 +2,8 @@ package com.unipay.models;
 
 import com.unipay.enums.AddressType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents a physical address associated with a user's profile.

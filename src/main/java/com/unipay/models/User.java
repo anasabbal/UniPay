@@ -81,14 +81,14 @@ public class User extends BaseEntity {
      * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<UserRole> roles;
+    private Set<UserRole> userRoles = new HashSet<>();
 
     /**
      * Records of the user's login attempts.
      * This is useful for auditing and tracking user login patterns for security purposes.
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<LoginHistory> loginHistories;
+    private Set<LoginHistory> loginHistories = new HashSet<>();
 
     /**
      * User-specific settings and preferences, such as notification preferences and language settings.
@@ -102,14 +102,14 @@ public class User extends BaseEntity {
      * This is important for account recovery and additional authentication.
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<SecurityQuestion> securityQuestions;
+    private Set<SecurityQuestion> securityQuestions = new HashSet<>();
 
     /**
      * Logs of actions performed by the user within the system, including administrative actions.
      * This allows for tracking user activities for security and auditing purposes.
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<AuditLog> auditLogs;
+    private Set<AuditLog> auditLogs = new HashSet<>();
 
     /**
      * Creates a new {@link User} instance from the provided {@link UserRegisterCommand}.

@@ -67,5 +67,5 @@ public class UserDto extends BaseEntityDto{
      * The set of roles assigned to the user.
      * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
      */
-    private Set<UserRoleDto> roles;
+    private Set<UserRoleDto> userRoles;
 }

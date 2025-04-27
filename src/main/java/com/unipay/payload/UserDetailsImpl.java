@@ -20,7 +20,7 @@ public class UserDetailsImpl implements UserDetails {
     private final User user;
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream()
+        return user.getUserRoles().stream()
                 .flatMap(userRole -> {
                     Role role = userRole.getRole();
                     Stream<GrantedAuthority> roleAuthority = Stream.of(

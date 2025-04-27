@@ -38,6 +38,6 @@ public class RoleServiceImpl implements RoleService{
                 );
         UserRole userRole = UserRole.create(user, role);
         userRoleRepository.save(userRole);
-        user.getRoles().add(userRole);
+        user.getUserRoles().add(userRole);
     }
 }

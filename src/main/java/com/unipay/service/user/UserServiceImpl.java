@@ -17,6 +17,7 @@ import com.unipay.service.settings.UserSettingsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,7 @@ public class UserServiceImpl implements UserService {
     private final UserSettingsService userSettingsService;
     private final LoginHistoryService loginHistoryService;
     private final AuditLogService auditLogService;
+    private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
 
 
@@ -78,6 +80,7 @@ public class UserServiceImpl implements UserService {
                 AuditLogAction.USER_CREATED.getAction(),
                 "User with username " + command.getUsername() + " has been created."
         );
+        user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         userRepository.save(user);
         return user;
     }

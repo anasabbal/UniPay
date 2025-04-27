@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @Getter
 @Setter
-public class UserRoleDto extends BaseEntityDto{
-    private String userId;
-    private String roleId;
+public class UserRoleDto extends BaseEntityDto {
+    private RoleDto role;
     private LocalDateTime assignedAt;
 }

@@ -1,6 +1,7 @@
 package com.unipay.dto;
 
 
+import com.unipay.enums.PermissionName;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PermissionDto extends BaseEntityDto{
-    private String name;
+    private PermissionName name;
     private String description;
 }

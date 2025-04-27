@@ -1,11 +1,13 @@
 package com.unipay.models;
 
+import com.unipay.enums.RoleName;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -33,7 +35,9 @@ public class Role extends BaseEntity {
     /**
      * The unique name of the role (e.g., "ADMIN", "USER").
      */
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private RoleName name;
 
     /**
      * A brief description of the role's purpose.
@@ -58,4 +62,13 @@ public class Role extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     private Set<Permission> permissions;
+
+    public static Role create(RoleName name, String description) {
+        Role role = new Role();
+        role.setName(name);
+        role.setDescription(description);
+        role.setUserRoles(new HashSet<>());
+        role.setPermissions(new HashSet<>());
+        return role;
+    }
 }

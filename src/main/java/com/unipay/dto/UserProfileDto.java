@@ -23,8 +23,8 @@ import java.time.LocalDate;
 @Data
 @Getter
 @Setter
-public class UserProfileDto {
-
+public class UserProfileDto extends BaseEntityDto{
+    private String id;
     /**
      * The full name of the user. This includes both first and last names.
      */

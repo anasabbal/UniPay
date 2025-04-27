@@ -3,7 +3,10 @@ package com.unipay.models;
 import com.unipay.command.ProfileCommand;
 import com.unipay.enums.UserGender;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -66,7 +69,8 @@ public class UserProfile extends BaseEntity {
      * The user's gender identity.
      * This field stores the gender of the user, typically as a string (e.g., "Male", "Female", etc.).
      */
-    private String gender;
+    @Enumerated(EnumType.STRING)
+    private UserGender gender;
 
     /**
      * The user's nationality or country of citizenship.
@@ -102,7 +106,7 @@ public class UserProfile extends BaseEntity {
         userProfile.fullName = command.getFullName();
         userProfile.dateOfBirth = command.getDateOfBirth();
         userProfile.phoneNumber = command.getPhoneNumber();
-        userProfile.gender = command.getGender();
+        userProfile.gender = UserGender.valueOf(command.getGender());
         userProfile.nationality = command.getNationality();
 
         return userProfile;

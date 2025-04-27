@@ -1,6 +1,9 @@
 package com.unipay.models;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,4 +53,12 @@ public class UserRole extends BaseEntity {
      * This helps track when the user was granted this role.
      */
     private LocalDateTime assignedAt;
+
+    public static UserRole create(User user, Role role) {
+        UserRole userRole = new UserRole();
+        userRole.setUser(user);
+        userRole.setRole(role);
+        userRole.setAssignedAt(LocalDateTime.now());
+        return userRole;
+    }
 }

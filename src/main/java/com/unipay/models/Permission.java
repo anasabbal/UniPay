@@ -1,11 +1,13 @@
 package com.unipay.models;
 
+import com.unipay.enums.PermissionName;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -33,7 +35,9 @@ public class Permission extends BaseEntity {
     /**
      * The unique name of the permission (e.g., "VIEW_DASHBOARD").
      */
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private PermissionName name;
 
     /**
      * A brief description of the permission's purpose.
@@ -46,4 +50,12 @@ public class Permission extends BaseEntity {
      */
     @ManyToMany(mappedBy = "permissions")
     private Set<Role> roles;
+
+    public static Permission create(PermissionName name, String description) {
+        Permission permission = new Permission();
+        permission.setName(name);
+        permission.setDescription(description);
+        permission.setRoles(new HashSet<>());
+        return permission;
+    }
 }

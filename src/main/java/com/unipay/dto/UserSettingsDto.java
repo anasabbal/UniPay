@@ -20,8 +20,8 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class UserSettingsDto {
-
+public class UserSettingsDto extends BaseEntityDto{
+    private String id;
     /**
      * A boolean flag indicating whether the user has enabled email notifications.
      * If true, email notifications are enabled for the user.

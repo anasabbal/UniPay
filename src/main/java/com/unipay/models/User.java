@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -79,15 +80,15 @@ public class User extends BaseEntity {
      * The set of roles assigned to the user.
      * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<UserRole> roles;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserRole> userRoles = new HashSet<>();
 
     /**
      * Records of the user's login attempts.
      * This is useful for auditing and tracking user login patterns for security purposes.
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<LoginHistory> loginHistories;
+    private Set<LoginHistory> loginHistories = new HashSet<>();
 
     /**
      * User-specific settings and preferences, such as notification preferences and language settings.
@@ -101,14 +102,14 @@ public class User extends BaseEntity {
      * This is important for account recovery and additional authentication.
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<SecurityQuestion> securityQuestions;
+    private Set<SecurityQuestion> securityQuestions = new HashSet<>();
 
     /**
      * Logs of actions performed by the user within the system, including administrative actions.
      * This allows for tracking user activities for security and auditing purposes.
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<AuditLog> auditLogs;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<AuditLog> auditLogs = new HashSet<>();
 
     /**
      * Creates a new {@link User} instance from the provided {@link UserRegisterCommand}.
@@ -122,7 +123,34 @@ public class User extends BaseEntity {
         user.username = command.getUsername();
         user.email = command.getEmail();
         user.passwordHash = command.getPassword();
-
         return user;
+    }
+    /**
+     * Adds a login history record to the user's login history.
+     * This method links the provided {@link LoginHistory} to the user.
+     * It also ensures that the login history is correctly associated with the user.
+     *
+     * @param loginHistory The {@link LoginHistory} object to be linked with the user.
+     */
+    public void addLoginHistory(LoginHistory loginHistory) {
+        // Initialize the set if it's null
+        if (this.loginHistories == null) {
+            this.loginHistories = new HashSet<>();
+        }
+        this.loginHistories.add(loginHistory);
+        loginHistory.setUser(this);
+    }
+    /**
+     * Adds an AuditLog entry to the user's audit log history.
+     * This method ensures that the audit log is properly associated with the user and the collection is not null.
+     *
+     * @param auditLog The {@link AuditLog} object to be added to the user's audit logs.
+     */
+    public void addAuditLog(AuditLog auditLog) {
+        if (this.auditLogs == null) {
+            this.auditLogs = new HashSet<>();
+        }
+        this.auditLogs.add(auditLog);
+        auditLog.setUser(this);
     }
 }

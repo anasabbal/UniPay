@@ -1,6 +1,6 @@
 package com.unipay.controller;
 
-import com.unipay.command.UserRegisterCommand;
+import com.unipay.criteria.UserCriteria;
 import com.unipay.dto.UserDto;
 import com.unipay.mapper.UserMapper;
 import com.unipay.models.User;
@@ -10,10 +10,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
@@ -40,41 +44,7 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
-    /**
-     * Endpoint for registering a new user along with their profile and settings.
-     * This method accepts a UserRegisterCommand containing the user's registration details,
-     * validates the information, and invokes the UserService to create the user in the system.
-     *
-     * OpenAPI documentation is included for automatic generation of API docs.
-     *
-     * @param command The UserRegisterCommand object containing the user's registration data.
-     * @return A ResponseEntity containing a UserRegistrationResponse with a success message.
-     */
-    @Operation(
-            summary = "Register a new user",
-            description = "Creates a user along with profile and settings",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "User registered successfully",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = UserRegistrationResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Invalid input"
-                    )
-            }
-    )
-    @PostMapping("/register")
-    public ResponseEntity<UserRegistrationResponse> registerUser(
-            @RequestBody UserRegisterCommand command, HttpServletRequest request
-    ) {
-        userService.create(command, request);
-        return ResponseEntity.ok(new UserRegistrationResponse("User registered successfully"));
-    }
+
     /**
      * Endpoint for retrieving a user by their unique ID.
      * This method fetches the user from the system using the UserService.
@@ -102,14 +72,27 @@ public class UserController {
     )
     @GetMapping("/{userId}")
     public ResponseEntity<UserDto> getUserById(@PathVariable String userId) {
-        Optional<User> userOpt = userService.getUserById(userId);
+        User userOpt = userService.getUserById(userId);
 
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            UserDto userDto = userMapper.toDto(user);
+        if (userOpt != null) {
+            UserDto userDto = userMapper.toDto(userOpt);
             return ResponseEntity.ok(userDto);
         } else {
             return ResponseEntity.status(404).body(new UserDto());
         }
+    }
+    @Operation(
+            summary = "Get users by criteria",
+            description = "Retrieves a paginated list of users based on filtering criteria",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input")
+            }
+    )
+    @GetMapping
+    public ResponseEntity<Page<UserDto>> getUsersByCriteria(UserCriteria criteria, Pageable pageable) {
+        Page<User> users = userService.getAllByCriteria(pageable, criteria);
+        Page<UserDto> userDtos = users.map(userMapper::toDto);
+        return ResponseEntity.ok(userDtos);
     }
 }

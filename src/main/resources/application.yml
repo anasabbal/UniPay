@@ -1,4 +1,15 @@
 spring:
+  mail:
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: 'true'
+          auth: 'true'
+    host: smtp.gmail.com
+    username: anas.abbal10@gmail.com
+    password: nblrzrmovgchaxkg
+    port: '587'
   sql:
     init:
       mode: always
@@ -36,3 +47,9 @@ jwt:
 # Custom application settings
 application:
   front-url: ${FRONT_URL:http://localhost:3000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+

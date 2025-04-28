@@ -1,10 +1,11 @@
 package com.unipay.service.user;
 
 import com.unipay.command.UserRegisterCommand;
+import com.unipay.criteria.UserCriteria;
 import com.unipay.models.User;
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Service interface for managing core user operations within the system.
@@ -45,5 +46,6 @@ public interface UserService {
      * @return The newly created and fully initialized {@link User} entity, including the user's profile and settings.
      */
     User create(final UserRegisterCommand command, HttpServletRequest request);
-    Optional<User> getUserById(String userId);
+    User getUserById(String userId);
+    Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria);
 }

@@ -21,7 +21,8 @@ public enum ExceptionPayloadFactory {
     MISSING_REQUEST_BODY_ERROR_CODE(2, HttpStatus.BAD_REQUEST, "request.missing.body"),
     USER_NOT_FOUND(3, HttpStatus.NOT_FOUND, "user.not.found"),
     USER_ALREADY_EXIST(4, HttpStatus.CONFLICT, "user.already.exist"),
-    ROLE_NOT_FOUND(5, HttpStatus.NOT_FOUND, "role.not.found");
+    ROLE_NOT_FOUND(5, HttpStatus.NOT_FOUND, "role.not.found"),
+    CONFIRMATION_TOKEN_NOT_FOUND(6, HttpStatus.NOT_FOUND, "confirmation.token.not.found");
 
     private final Integer code;
     private final HttpStatus status;

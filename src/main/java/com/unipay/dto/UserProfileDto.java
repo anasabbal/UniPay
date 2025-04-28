@@ -1,10 +1,12 @@
 package com.unipay.dto;
 
+import com.unipay.models.Address;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 /**
  * UserProfileDto is a Data Transfer Object (DTO) used for transferring user profile-related data
@@ -51,4 +53,11 @@ public class UserProfileDto extends BaseEntityDto{
      * of the user's national origin.
      */
     private String nationality;
+
+    /**
+     * A set of addresses linked to the user's profile.
+     * This allows the user to have multiple addresses stored in their profile.
+     * This is a one-to-many relationship with the {@link Address} entity.
+     */
+    private Set<AddressDto> addresses;
 }

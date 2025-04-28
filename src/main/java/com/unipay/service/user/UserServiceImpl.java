@@ -1,22 +1,28 @@
 package com.unipay.service.user;
 
 import com.unipay.command.UserRegisterCommand;
+import com.unipay.criteria.UserCriteria;
 import com.unipay.enums.AuditLogAction;
 import com.unipay.enums.RoleName;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
+import com.unipay.models.ConfirmationToken;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
 import com.unipay.models.UserSettings;
 import com.unipay.repository.UserRepository;
 import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
+import com.unipay.service.mail.EmailService;
 import com.unipay.service.profile.UserProfileService;
 import com.unipay.service.role.RoleService;
 import com.unipay.service.settings.UserSettingsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +62,7 @@ public class UserServiceImpl implements UserService {
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final EmailService emailService;
 
 
     /**
@@ -82,7 +89,19 @@ public class UserServiceImpl implements UserService {
         );
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         userRepository.save(user);
+        final ConfirmationToken confirmationToken = new ConfirmationToken(user);
+        sendEmail(user, confirmationToken);
         return user;
+    }
+
+    private void sendEmail(User user, ConfirmationToken confirmationToken){
+        final String pathApp = "";
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setSubject("Complete Registration!");
+        mailMessage.setText("To confirm your account, please click here : "
+                + pathApp + "confirm-account?token="+confirmationToken.getConfirmationToken());
+        emailService.sendEmail(mailMessage);
     }
 
     /**
@@ -158,12 +177,25 @@ public class UserServiceImpl implements UserService {
      * @return An {@link Optional} containing the user if found, or an empty {@link Optional} if no user is found.
      */
     @Override
-    public Optional<User> getUserById(String userId) {
+    public User getUserById(String userId) {
         log.debug("Begin fetching User with ID {}", userId);
         final User user = userRepository.findById(userId).orElseThrow(
                 () -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get())
         );
         log.debug("User fetched successfully with ID {}", userId);
-        return userRepository.findById(userId);
+        return user;
     }
+
+    @Override
+    public Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria) {
+        try {
+            Page<User> users = userRepository.getUsersByCriteria(pageable, criteria);
+            log.debug("User by criteria fetched successfully !!");
+            return users;
+        } catch (Exception e) {
+            log.error("Error fetching users by criteria", e);
+            throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), e);
+        }
+    }
+
 }

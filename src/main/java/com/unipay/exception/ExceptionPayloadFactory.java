@@ -22,7 +22,12 @@ public enum ExceptionPayloadFactory {
     USER_NOT_FOUND(3, HttpStatus.NOT_FOUND, "user.not.found"),
     USER_ALREADY_EXIST(4, HttpStatus.CONFLICT, "user.already.exist"),
     ROLE_NOT_FOUND(5, HttpStatus.NOT_FOUND, "role.not.found"),
-    CONFIRMATION_TOKEN_NOT_FOUND(6, HttpStatus.NOT_FOUND, "confirmation.token.not.found");
+    CONFIRMATION_TOKEN_NOT_FOUND(6, HttpStatus.NOT_FOUND, "confirmation.token.not.found"),
+    PERMISSION_NOT_FOUND(7, HttpStatus.NOT_FOUND, "permission.not.found"),
+    AUDIT_LOG_NOT_FOUND(8, HttpStatus.NOT_FOUND, "audit.log.not.found"),
+    USER_NOT_ACTIVE(9, HttpStatus.FORBIDDEN, "user.not.active"),
+    AUTHENTICATION_FAILED(10, HttpStatus.UNAUTHORIZED, "authentication.failed"),
+    FAILED_TO_SEND_EMAIL(11, HttpStatus.FAILED_DEPENDENCY, "failed.to.send.email");
 
     private final Integer code;
     private final HttpStatus status;

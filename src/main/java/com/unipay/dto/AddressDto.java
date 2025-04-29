@@ -2,8 +2,6 @@ package com.unipay.dto;
 
 
 import com.unipay.enums.AddressType;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;

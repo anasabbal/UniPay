@@ -1,12 +1,16 @@
 package com.unipay.service.login_histroy;
 
+
 import com.unipay.models.LoginHistory;
 import com.unipay.models.User;
 import com.unipay.repository.LoginHistoryRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation of the {@link LoginHistoryService} interface that handles login history creation.
@@ -29,8 +33,8 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
      */
     @Override
     public void createLoginHistory(User user, HttpServletRequest request, boolean successful) {
-        String ipAddress = request.getRemoteAddr(); // Get IP address of the client
-        String userAgent = request.getHeader("User-Agent"); // Get the user agent (browser/device information)
+        String ipAddress = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
 
         LoginHistory loginHistory = new LoginHistory();
         loginHistory.setUser(user);
@@ -39,8 +43,15 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         loginHistory.setUserAgent(userAgent);
         loginHistory.setSuccessful(successful);
 
-        // Save the login history and also add it to the user
         user.addLoginHistory(loginHistory);
         loginHistoryRepository.save(loginHistory);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LoginHistory> getLoginHistoryByUserId(Pageable pageable, String userId) {
+        log.info("Begin fetching LoginHistory with userId {}", userId);
+        final Page<LoginHistory> loginHistories = loginHistoryRepository.getLoginHistoriesByUser_Id(pageable, userId);
+        log.info("LoginHistory fetched successfully");
+        return loginHistories;
     }
 }

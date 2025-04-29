@@ -24,12 +24,13 @@ import lombok.Setter;
  * making account recovery or additional authentication steps more secure.
  */
 @Entity
-@Table(name = "security_questions")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "security_questions")
 public class SecurityQuestion extends BaseEntity {
+
     /**
      * The user to whom this security question belongs.
      * This relationship ensures that each security question is tied to a specific user.

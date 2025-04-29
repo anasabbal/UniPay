@@ -6,6 +6,7 @@ import com.unipay.enums.AuditLogAction;
 import com.unipay.enums.RoleName;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
+import com.unipay.helper.UserRegistrationHelper;
 import com.unipay.models.ConfirmationToken;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
@@ -62,6 +63,7 @@ public class UserServiceImpl implements UserService {
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final UserRegistrationHelper registrationHelper;
     private final EmailService emailService;
 
 
@@ -76,34 +78,30 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User create(UserRegisterCommand command, HttpServletRequest request) {
-        log.debug("Start creating User with username {}", command.getUsername());
+        log.debug("Creating user: {}", command.getUsername());
         checkIfUserExists(command);
-        User user = createUser(command);
+
+        User user = createUserEntity(command);
         roleService.assignRoleToUser(user, RoleName.USER);
-        associateUserProfileAndSettings(user, command);
-        logLoginHistory(user, request);
-        auditLogCreate(
+
+        registrationHelper.associateUserProfileAndSettings(user, command);
+        registrationHelper.logLoginHistory(user, request);
+        registrationHelper.auditLogCreate(
                 user,
                 AuditLogAction.USER_CREATED.getAction(),
-                "User with username " + command.getUsername() + " has been created."
+                "User created: " + command.getUsername()
         );
-        user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
-        userRepository.save(user);
-        final ConfirmationToken confirmationToken = new ConfirmationToken(user);
-        sendEmail(user, confirmationToken);
+        emailService.sendConfirmationEmail(user);
         return user;
     }
-
-    private void sendEmail(User user, ConfirmationToken confirmationToken){
-        final String pathApp = "";
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(user.getEmail());
-        mailMessage.setSubject("Complete Registration!");
-        mailMessage.setText("To confirm your account, please click here : "
-                + pathApp + "confirm-account?token="+confirmationToken.getConfirmationToken());
-        emailService.sendEmail(mailMessage);
+    private User createUserEntity(UserRegisterCommand command) {
+        User user = User.create(command);
+        user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
+        return userRepository.saveAndFlush(user);
     }
-
+    private void persistUser(User user) {
+        userRepository.saveAndFlush(user);
+    }
     /**
      * Check if a user already exists by email or username.
      *
@@ -117,66 +115,13 @@ public class UserServiceImpl implements UserService {
         }
     }
     /**
-     * Creates a new User entity from the provided registration command.
-     *
-     * @param command The registration command containing user data.
-     * @return The newly created User entity.
-     */
-    private User createUser(UserRegisterCommand command) {
-        User user = User.create(command);
-        log.debug("User created with username {}", command.getUsername());
-        return userRepository.save(user);
-    }
-
-    /**
-     * Associates a UserProfile and UserSettings to the newly created user.
-     *
-     * @param user The user to associate the profile and settings with.
-     * @param command The registration command containing user profile and settings data.
-     */
-    private void associateUserProfileAndSettings(User user, UserRegisterCommand command) {
-        try {
-            UserProfile userProfile = userProfileService.create(command.getProfile(), user);
-            UserSettings userSettings = userSettingsService.create(command.getSettings(), user);
-
-            user.setProfile(userProfile);
-            user.setSettings(userSettings);
-        } catch (Exception e) {
-            log.error("Error creating and associating user profile/settings", e);
-            throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), e);
-        }
-    }
-    private void auditLogCreate(User user, String action, String details){
-        try {
-            auditLogService.createAuditLog(user, action, details);
-        } catch (Exception e) {
-            log.error("Error creating audit log for user", e);
-            throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), e);
-        }
-    }
-
-    /**
-     * Logs the login history for the user and associates it with their account.
-     *
-     * @param user The user to log the login history for.
-     * @param request The HTTP request containing the client’s IP address and user agent.
-     */
-    private void logLoginHistory(User user, HttpServletRequest request) {
-        try {
-            loginHistoryService.createLoginHistory(user, request, true);
-        } catch (Exception e) {
-            log.error("Error creating login history for user", e);
-            throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), e);
-        }
-    }
-
-    /**
      * Retrieves a user by their ID.
      *
      * @param userId The unique identifier of the user.
      * @return An {@link Optional} containing the user if found, or an empty {@link Optional} if no user is found.
      */
     @Override
+    @Transactional(readOnly = true)
     public User getUserById(String userId) {
         log.debug("Begin fetching User with ID {}", userId);
         final User user = userRepository.findById(userId).orElseThrow(
@@ -185,8 +130,21 @@ public class UserServiceImpl implements UserService {
         log.debug("User fetched successfully with ID {}", userId);
         return user;
     }
-
+    /**
+     * Retrieves a paginated list of {@link User} entities based on the specified filtering criteria.
+     *
+     * <p>This method delegates to the {@link UserRepository} to fetch users matching the provided
+     * {@link UserCriteria} filters and paginates the result according to the given {@link Pageable} object.
+     * In case of any exceptions during the fetching process, a {@link BusinessException} is thrown
+     * with a technical error payload.</p>
+     *
+     * @param pageable the pagination information, including page number, size, and sorting
+     * @param criteria the filtering criteria to apply when fetching users
+     * @return a page of users matching the specified criteria
+     * @throws BusinessException if an error occurs while fetching users from the repository
+     */
     @Override
+    @Transactional(readOnly = true)
     public Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria) {
         try {
             Page<User> users = userRepository.getUsersByCriteria(pageable, criteria);

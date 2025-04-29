@@ -73,7 +73,11 @@ public class User extends BaseEntity {
      * The user's profile containing personal information such as name, address, and other details.
      * This is a one-to-one relationship with the {@link UserProfile} entity.
      */
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private UserProfile profile;
 
     /**

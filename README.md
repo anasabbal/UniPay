@@ -1,4 +1,5 @@
 # Payment Gateway - Monolithic Java Spring Boot
+<img src="img/unipay.png" alt="UniPay Image" width="100" height="100"/>
 
 A robust and scalable monolithic payment gateway API built with **Java Spring Boot**.
 

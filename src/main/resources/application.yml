@@ -8,7 +8,7 @@ spring:
           auth: 'true'
     host: smtp.gmail.com
     username: anas.abbal10@gmail.com
-    password: nblrzrmovgchaxkg
+    password: ecnijepaxsaeccpi
     port: '587'
   sql:
     init:
@@ -52,4 +52,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+app:
+  website: www.unipay.com
+  name: UniPay
+  support:
+    email: anas.abbal10@gmail.com
 

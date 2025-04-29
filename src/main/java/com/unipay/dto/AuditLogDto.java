@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class AuditLogDto extends BaseEntityDto{
+
     private String id;
     /**
      * A short description or title of the action performed.

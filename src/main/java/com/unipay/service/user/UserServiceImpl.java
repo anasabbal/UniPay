@@ -4,6 +4,7 @@ import com.unipay.command.UserRegisterCommand;
 import com.unipay.criteria.UserCriteria;
 import com.unipay.enums.AuditLogAction;
 import com.unipay.enums.RoleName;
+import com.unipay.enums.UserStatus;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.helper.UserRegistrationHelper;
@@ -92,6 +93,7 @@ public class UserServiceImpl implements UserService {
                 "User created: " + command.getUsername()
         );
         emailService.sendConfirmationEmail(user);
+        user.setStatus(UserStatus.PENDING);
         return user;
     }
     private User createUserEntity(UserRegisterCommand command) {

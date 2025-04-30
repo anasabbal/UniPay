@@ -9,20 +9,15 @@ import com.unipay.models.User;
 import com.unipay.repository.ConfirmationTokenRepository;
 import com.unipay.repository.UserRepository;
 import com.unipay.utils.EmailContentBuilder;
-import com.unipay.utils.JSONUtil;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.security.SecureRandom;
-import java.time.LocalDate;
 
 @Slf4j
 @Service

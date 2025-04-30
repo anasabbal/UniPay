@@ -40,7 +40,7 @@ server:
 
 # JWT Configuration
 jwt:
-  secret: your-256-bit-base64-encoded-secret-key
+  secret: QkZDa0Z3S3dZalZ3YnhNU2h4T2dUYUJ3U2NhVGxLQ3RtU1h3QmFsRVRPbXlXR1pU
   access-token-expiration: 900000    # 15 minutes
   refresh-token-expiration: 604800000 # 7 days
 
@@ -57,4 +57,3 @@ app:
   name: UniPay
   support:
     email: anas.abbal10@gmail.com
-

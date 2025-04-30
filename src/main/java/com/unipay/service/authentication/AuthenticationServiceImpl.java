@@ -15,7 +15,6 @@ import com.unipay.response.LoginResponse;
 import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
 import com.unipay.service.user.UserService;
-import com.unipay.service.user.UserServiceImpl;
 import com.unipay.utils.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -37,14 +36,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthenticationServiceImpl implements AuthenticationService{
+public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
-    private final LoginHistoryService loginHistoryService;
-    private final AuditLogService auditLogService;
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
+    private final LoginHistoryService loginHistoryService;
+    private final AuthenticationManager authenticationManager;
 
 
     @Override
@@ -58,51 +57,77 @@ public class AuthenticationServiceImpl implements AuthenticationService{
     @Auditable(action = "USER_LOGIN")
     public LoginResponse login(LoginCommand command, HttpServletRequest request) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(command.getEmail(), command.getPassword())
-            );
+            Authentication authentication = attemptAuthentication(command);
+            User user = getAuthenticatedUser(authentication);
+            validateUserStatus(user);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-            User user = userRepository.findByEmail(command.getEmail())
-                    .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
-
-            if (user.getStatus() != UserStatus.ACTIVE) {
-                throw new BusinessException(ExceptionPayloadFactory.USER_NOT_ACTIVE.get());
-            }
-
-            String jwtToken = jwtService.generateAccessToken(userDetails);
-
-            loginHistoryService.createLoginHistory(user, request, true);
-            auditLogService.createAuditLog(
-                    user,
-                    AuditLogAction.LOGIN_SUCCESS.getAction(),
-                    "User logged in successfully."
-            );
-
-            List<String> roles = userDetails.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-
-            return new LoginResponse(jwtToken, roles);
+            logSuccessfulLogin(user, request);
+            return createLoginResponse(authentication);
 
         } catch (DisabledException e) {
-            handleFailedLogin(command.getEmail(), request, "Account not active", AuditLogAction.LOGIN_FAILED);
-            throw new BusinessException(ExceptionPayloadFactory.USER_NOT_ACTIVE.get());
+            handleAuthenticationFailure(command.getEmail(), request, "Account disabled",
+                    ExceptionPayloadFactory.USER_NOT_ACTIVE);
         } catch (BadCredentialsException e) {
-            handleFailedLogin(command.getEmail(), request, "Invalid credentials", AuditLogAction.LOGIN_FAILED);
-            throw new BusinessException(ExceptionPayloadFactory.INVALID_PAYLOAD.get());
+            handleAuthenticationFailure(command.getEmail(), request, "Invalid credentials",
+                    ExceptionPayloadFactory.INVALID_PAYLOAD);
         } catch (AuthenticationException e) {
-            handleFailedLogin(command.getEmail(), request, "Authentication failed", AuditLogAction.LOGIN_FAILED);
-            throw new BusinessException(ExceptionPayloadFactory.AUTHENTICATION_FAILED.get());
+            handleAuthenticationFailure(command.getEmail(), request, "Authentication failure",
+                    ExceptionPayloadFactory.AUTHENTICATION_FAILED);
+        }
+        throw new BusinessException(ExceptionPayloadFactory.AUTHENTICATION_FAILED.get());
+    }
+
+    private Authentication attemptAuthentication(LoginCommand command) {
+        return authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        command.getEmail(),
+                        command.getPassword()
+                )
+        );
+    }
+
+    private User getAuthenticatedUser(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+    }
+
+    private void validateUserStatus(User user) {
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new DisabledException("User account is not active");
         }
     }
-    private void handleFailedLogin(String email, HttpServletRequest request, String details, AuditLogAction action) {
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null) {
+
+    private void logSuccessfulLogin(User user, HttpServletRequest request) {
+        loginHistoryService.createLoginHistory(user, request, true);
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.LOGIN_SUCCESS.getAction(),
+                "Successful login"
+        );
+    }
+
+    private LoginResponse createLoginResponse(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        return new LoginResponse(
+                jwtService.generateTokenPair(userDetails),
+                roles
+        );
+    }
+
+    private void handleAuthenticationFailure(String email, HttpServletRequest request,
+                                             String reason, ExceptionPayloadFactory payload) {
+        userRepository.findByEmail(email).ifPresent(user -> {
             loginHistoryService.createLoginHistory(user, request, false);
-            auditLogService.createAuditLog(user, action.getAction(), details);
-        }
+            auditLogService.createAuditLog(user,
+                    AuditLogAction.LOGIN_FAILED.getAction(),
+                    "Failed login attempt: " + reason
+            );
+        });
+        throw new BusinessException(payload.get());
     }
 }

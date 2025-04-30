@@ -3,7 +3,6 @@ package com.unipay.controller;
 
 import com.unipay.command.LoginCommand;
 import com.unipay.command.UserRegisterCommand;
-import com.unipay.mapper.UserMapper;
 import com.unipay.response.LoginResponse;
 import com.unipay.response.UserRegistrationResponse;
 import com.unipay.service.authentication.AuthenticationService;

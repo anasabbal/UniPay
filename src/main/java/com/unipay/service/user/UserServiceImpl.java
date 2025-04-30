@@ -8,23 +8,17 @@ import com.unipay.enums.UserStatus;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.helper.UserRegistrationHelper;
-import com.unipay.models.ConfirmationToken;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
 import com.unipay.models.UserSettings;
 import com.unipay.repository.UserRepository;
-import com.unipay.service.audit_log.AuditLogService;
-import com.unipay.service.login_histroy.LoginHistoryService;
 import com.unipay.service.mail.EmailService;
-import com.unipay.service.profile.UserProfileService;
 import com.unipay.service.role.RoleService;
-import com.unipay.service.settings.UserSettingsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,11 +51,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+
     private final UserRepository userRepository;
-    private final UserProfileService userProfileService;
-    private final UserSettingsService userSettingsService;
-    private final LoginHistoryService loginHistoryService;
-    private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
     private final UserRegistrationHelper registrationHelper;
@@ -100,9 +91,6 @@ public class UserServiceImpl implements UserService {
         User user = User.create(command);
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         return userRepository.saveAndFlush(user);
-    }
-    private void persistUser(User user) {
-        userRepository.saveAndFlush(user);
     }
     /**
      * Check if a user already exists by email or username.

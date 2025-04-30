@@ -1,8 +1,9 @@
 package com.unipay.controller;
 
 
+import com.unipay.command.LoginCommand;
 import com.unipay.command.UserRegisterCommand;
-import com.unipay.mapper.UserMapper;
+import com.unipay.response.LoginResponse;
 import com.unipay.response.UserRegistrationResponse;
 import com.unipay.service.authentication.AuthenticationService;
 import com.unipay.service.mail.EmailService;
@@ -15,14 +16,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.unipay.constants.ResourcePaths.*;
+
 @RestController
-@RequestMapping("/v1/auth")
+@RequestMapping(V1 + AUTH)
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationService authenticationService;
     private final EmailService emailService;
-    private final UserMapper userMapper;
+    private final AuthenticationService authenticationService;
 
     /**
      * Endpoint for registering a new user along with their profile and settings.
@@ -52,17 +54,23 @@ public class AuthController {
                     )
             }
     )
-    @PostMapping("/register")
+    @PostMapping(REGISTER)
     public ResponseEntity<UserRegistrationResponse> registerUser(
             @RequestBody UserRegisterCommand command, HttpServletRequest request
     ) {
         authenticationService.register(command, request);
         return ResponseEntity.ok(new UserRegistrationResponse("User registered successfully"));
     }
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginCommand command, HttpServletRequest request) {
+        LoginResponse response = authenticationService.login(command, request);
+        return ResponseEntity.ok(response);
+    }
 
-    @GetMapping("/confirm-account")
-    public ResponseEntity<?> confirmUserAccount(@RequestParam("token")String confirmationToken) {
-        emailService.confirmRegistration(confirmationToken);
-        return ResponseEntity.ok("Email verified successfully!");
+    @Operation(summary = "Confirm user registration", description = "Verifies a user's email using the confirmation token sent via email")
+    @PostMapping(CONFIRM)
+    public String confirmRegistration(@RequestParam("code") String confirmationCode) {
+        emailService.confirmRegistration(confirmationCode);
+        return "Email confirmed successfully.";
     }
 }

@@ -1,11 +1,13 @@
 package com.unipay.utils;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +20,9 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // Externalized configuration
+    private static final String TOKEN_TYPE = "JWT";
+    private static final String TOKEN_ISSUER = "Unipay-Auth-Service";
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -28,40 +32,53 @@ public class JwtService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
-    public String generateAccessToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, accessTokenExpiration);
+    public TokenPair generateTokenPair(UserDetails userDetails) {
+        return new TokenPair(
+                buildAccessToken(userDetails),
+                buildRefreshToken(userDetails)
+        );
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
+    private String buildAccessToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList());
+        return buildToken(claims, userDetails, accessTokenExpiration);
+    }
+
+    private String buildRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, refreshTokenExpiration);
     }
 
-    public String generateToken(
-            UserDetails userDetails,
-            Map<String, Object> extraClaims
-    ) {
-        return buildToken(extraClaims, userDetails, accessTokenExpiration);
-    }
-
-    private String buildToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails,
-            long expiration
-    ) {
+    private String buildToken(Map<String, Object> claims, UserDetails userDetails, long expiration) {
         return Jwts.builder()
-                .setClaims(extraClaims)
+                .setHeaderParam("typ", TOKEN_TYPE)
+                .setIssuer(TOKEN_ISSUER)
+                .setClaims(claims)
                 .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        try {
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
+    public String extractUsername(String token) throws JwtException {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) throws JwtException {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
@@ -70,16 +87,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) throws JwtException {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -90,13 +98,6 @@ public class JwtService {
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    // Token pair generation
-    public TokenPair generateTokenPair(UserDetails userDetails) {
-        String accessToken = generateAccessToken(userDetails);
-        String refreshToken = generateRefreshToken(userDetails);
-        return new TokenPair(accessToken, refreshToken);
     }
 
     public record TokenPair(String accessToken, String refreshToken) {}

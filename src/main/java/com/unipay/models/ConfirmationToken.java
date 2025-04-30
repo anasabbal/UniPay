@@ -1,13 +1,11 @@
 package com.unipay.models;
 
-import com.unipay.constants.ResourcePathAndConst;
+import com.unipay.constants.Constants;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.security.SecureRandom;
 import java.util.Date;
-import java.util.Random;
-import java.util.UUID;
 
 
 @Getter
@@ -49,7 +47,7 @@ public class ConfirmationToken {
         for (int i = 0; i < 3; i++) {
             if (i > 0) code.append("-");
             for (int j = 0; j < 3; j++) {
-                code.append(ResourcePathAndConst.CHARACTERS.charAt(random.nextInt(ResourcePathAndConst.CHARACTERS.length())));
+                code.append(Constants.CHARACTERS.charAt(random.nextInt(Constants.CHARACTERS.length())));
             }
         }
         return code.toString();

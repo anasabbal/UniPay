@@ -3,10 +3,7 @@ package com.unipay.models;
 import com.unipay.command.UserRegisterCommand;
 import com.unipay.enums.UserStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +30,7 @@ import java.util.Set;
  * about the user’s account, authentication, and associated information. It supports user registration,
  * login history tracking, and role management, among other features.
  */
+@Builder
 @Entity
 @Table(name = "users")
 @Getter

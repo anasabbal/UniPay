@@ -30,16 +30,6 @@ public class EmailServiceImp implements EmailService{
     private final UserRepository userRepository;
 
 
-    @Value("${app.name}")
-    private String appName;
-
-    @Value("${app.support.email}")
-    private String supportEmail;
-
-    @Value("${app.website}")
-    private String websiteUrl;
-
-
     @Async
     @Override
     @Transactional

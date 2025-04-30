@@ -4,8 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -42,6 +42,8 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "login_history")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class LoginHistory extends BaseEntity {
 
     /**
@@ -74,4 +76,14 @@ public class LoginHistory extends BaseEntity {
      * A value of true means the login attempt succeeded, and false means it failed.
      */
     private boolean successful;
+
+    public static LoginHistory create(User user, boolean successful){
+        final LoginHistory loginHistory = new LoginHistory();
+
+        loginHistory.user = user;
+        loginHistory.loginTimestamp = LocalDateTime.now();
+        loginHistory.successful = successful;
+
+        return loginHistory;
+    }
 }

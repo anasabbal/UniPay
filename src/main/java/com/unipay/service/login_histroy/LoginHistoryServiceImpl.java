@@ -36,9 +36,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
         String ipAddress = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
 
-        LoginHistory loginHistory = new LoginHistory();
-        loginHistory.setUser(user);
-        loginHistory.setLoginTimestamp(java.time.LocalDateTime.now());
+        LoginHistory loginHistory = LoginHistory.create(user, successful);
         loginHistory.setIpAddress(ipAddress);
         loginHistory.setUserAgent(userAgent);
         loginHistory.setSuccessful(successful);

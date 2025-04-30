@@ -1,0 +1,10 @@
+package com.unipay.constants;
+
+public class ResourcePaths {
+    public static final String V1 = "/v1";
+    public static final String USERS = "/users";
+    public static final String CONFIRM = "/confirm";
+    public static final String REGISTER = "/register";
+    public static final String LOGIN = "/login";
+    public static final String AUTH= "/auth";
+}

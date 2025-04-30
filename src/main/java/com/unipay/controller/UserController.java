@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.unipay.constants.ResourcePaths.USERS;
+import static com.unipay.constants.ResourcePaths.V1;
+
 /**
  * UserController is responsible for handling HTTP requests related to user management.
  * It provides an endpoint for user registration and interacts with the UserService
@@ -36,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/users")
+@RequestMapping(V1 + USERS)
 public class UserController {
 
     private final UserService userService;

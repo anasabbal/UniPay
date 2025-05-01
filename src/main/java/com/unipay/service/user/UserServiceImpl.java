@@ -92,6 +92,16 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         return userRepository.saveAndFlush(user);
     }
+
+    @Override
+    public User findByEmailWithRolesAndPermissions(String email) {
+        log.info("Begin fetching user with email {}", email);
+        final User user =  userRepository.findByEmailWithRolesAndPermissions(email)
+                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+        log.info("User with email {} fetched successfully", user.getEmail());
+        return user;
+    }
+
     /**
      * Check if a user already exists by email or username.
      *

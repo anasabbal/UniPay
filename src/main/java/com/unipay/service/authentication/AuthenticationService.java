@@ -9,4 +9,5 @@ import jakarta.servlet.http.HttpServletRequest;
 public interface AuthenticationService {
     User register(UserRegisterCommand command, HttpServletRequest request);
     LoginResponse login(LoginCommand command, HttpServletRequest request);
+    User getCurrentUser();
 }

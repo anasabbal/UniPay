@@ -1,5 +1,6 @@
 package com.unipay.mapper;
 
+import com.unipay.dto.CurrentUser;
 import com.unipay.dto.UserDto;
 import com.unipay.models.User;
 import org.mapstruct.Mapper;
@@ -18,4 +19,5 @@ public abstract class UserMapper {
      * @return The converted `UserDto` object.
      */
     public abstract UserDto toDto(User user);
+    public abstract CurrentUser toUser(User user);
 }

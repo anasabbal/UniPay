@@ -31,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -75,6 +74,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     ExceptionPayloadFactory.AUTHENTICATION_FAILED);
         }
         throw new BusinessException(ExceptionPayloadFactory.AUTHENTICATION_FAILED.get());
+    }
+
+    @Override
+    @Transactional
+    public User getCurrentUser() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Authentication: {}", authentication);
+        return userService.findByEmailWithRolesAndPermissions(authentication.getName());
     }
 
     private Authentication attemptAuthentication(LoginCommand command) {

@@ -3,10 +3,14 @@ package com.unipay.controller;
 
 import com.unipay.command.LoginCommand;
 import com.unipay.command.UserRegisterCommand;
+import com.unipay.dto.CurrentUser;
+import com.unipay.mapper.UserMapper;
+import com.unipay.models.User;
 import com.unipay.response.LoginResponse;
 import com.unipay.response.UserRegistrationResponse;
 import com.unipay.service.authentication.AuthenticationService;
 import com.unipay.service.mail.EmailService;
+import com.unipay.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,8 +27,10 @@ import static com.unipay.constants.ResourcePaths.*;
 @RequiredArgsConstructor
 public class AuthController {
 
+    private final UserMapper userMapper;
     private final EmailService emailService;
     private final AuthenticationService authenticationService;
+    private final UserService userService;
 
     /**
      * Endpoint for registering a new user along with their profile and settings.
@@ -61,7 +67,7 @@ public class AuthController {
         authenticationService.register(command, request);
         return ResponseEntity.ok(new UserRegistrationResponse("User registered successfully"));
     }
-    @PostMapping("/login")
+    @PostMapping(LOGIN)
     public ResponseEntity<LoginResponse> login(@RequestBody LoginCommand command, HttpServletRequest request) {
         LoginResponse response = authenticationService.login(command, request);
         return ResponseEntity.ok(response);
@@ -72,5 +78,10 @@ public class AuthController {
     public String confirmRegistration(@RequestParam("code") String confirmationCode) {
         emailService.confirmRegistration(confirmationCode);
         return "Email confirmed successfully.";
+    }
+    @GetMapping(CURRENT)
+    public ResponseEntity<CurrentUser> getCurrentUser(){
+        final User user = authenticationService.getCurrentUser();
+        return ResponseEntity.ok(userMapper.toUser(user));
     }
 }

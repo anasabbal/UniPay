@@ -9,13 +9,17 @@ import com.unipay.enums.UserStatus;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.models.User;
+import com.unipay.models.UserSession;
 import com.unipay.payload.UserDetailsImpl;
 import com.unipay.repository.UserRepository;
 import com.unipay.response.LoginResponse;
 import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
+import com.unipay.service.mfa.MFAService;
+import com.unipay.service.session.UserSessionService;
 import com.unipay.service.user.UserService;
 import com.unipay.utils.JwtService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,17 +42,20 @@ import java.util.List;
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtService jwtService;
+    private final MFAService mfaService;
     private final UserService userService;
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
+    private final UserSessionService userSessionService;
     private final LoginHistoryService loginHistoryService;
     private final AuthenticationManager authenticationManager;
 
 
+
     @Override
     @Auditable(action = "USER_REGISTRATION")
-    public User register(UserRegisterCommand command, HttpServletRequest request) {
-        return userService.create(command, request);
+    public void register(UserRegisterCommand command, HttpServletRequest request) {
+        userService.create(command, request);
     }
 
     @Override
@@ -60,8 +67,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User user = getAuthenticatedUser(authentication);
             validateUserStatus(user);
 
+            // Handle MFA flow
+            if (user.getMfaSettings() != null && user.getMfaSettings().isEnabled()) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                String challengeToken = jwtService.generateMfaChallengeToken(userDetails);
+                return LoginResponse.mfaRequired(challengeToken);
+            }
+
+            // Regular login flow
+            UserSession session = createUserSession(user, request);
             logSuccessfulLogin(user, request);
-            return createLoginResponse(authentication);
+            return createLoginResponse((UserDetailsImpl) authentication.getPrincipal(), session);
 
         } catch (DisabledException e) {
             handleAuthenticationFailure(command.getEmail(), request, "Account disabled",
@@ -73,7 +89,49 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             handleAuthenticationFailure(command.getEmail(), request, "Authentication failure",
                     ExceptionPayloadFactory.AUTHENTICATION_FAILED);
         }
-        throw new BusinessException(ExceptionPayloadFactory.AUTHENTICATION_FAILED.get());
+        return LoginResponse.error();
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse verifyMfa(String challengeToken, String code, HttpServletRequest request) {
+        try {
+            // Validate challenge token
+            if (!jwtService.isMfaChallengeToken(challengeToken)) {
+                throw new BusinessException(ExceptionPayloadFactory.INVALID_MFA_CHALLENGE.get());
+            }
+
+            String email = jwtService.extractUsername(challengeToken);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+
+            // Validate MFA code
+            if (!mfaService.validateCode(user, code)) {
+                handleAuthenticationFailure(email, request, "Invalid MFA code",
+                        ExceptionPayloadFactory.INVALID_MFA_CODE);
+            }
+
+            // Complete login
+            UserSession session = createUserSession(user, request);
+            logSuccessfulLogin(user, request);
+
+            UserDetailsImpl userDetails = new UserDetailsImpl(user);
+            userDetails.setMfaVerified(true);
+
+            return createLoginResponse(userDetails, session);
+
+        } catch (JwtException e) {
+            throw new BusinessException(ExceptionPayloadFactory.INVALID_MFA_CHALLENGE.get());
+        }
+    }
+    private UserSession createUserSession(User user, HttpServletRequest request) {
+        UserSession session = userSessionService.createSession(
+                user,
+                request.getHeader("User-Agent"),
+                request.getRemoteAddr()
+        );
+        user.getSessions().add(session);
+        return session;
     }
 
     @Override
@@ -114,15 +172,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
     }
 
-    private LoginResponse createLoginResponse(Authentication authentication) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        return new LoginResponse(
-                jwtService.generateTokenPair(userDetails),
-                roles
+    private LoginResponse createLoginResponse(UserDetailsImpl userDetails, UserSession session) {
+        return LoginResponse.success(
+                jwtService.generateTokenPair(userDetails, session.getId()),
+                userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList())
         );
     }
 
@@ -134,6 +189,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     AuditLogAction.LOGIN_FAILED.getAction(),
                     "Failed login attempt: " + reason
             );
+
         });
         throw new BusinessException(payload.get());
     }

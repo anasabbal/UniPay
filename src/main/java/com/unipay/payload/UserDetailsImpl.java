@@ -5,6 +5,7 @@ import com.unipay.enums.UserStatus;
 import com.unipay.models.Role;
 import com.unipay.models.User;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,11 +14,12 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
+@Setter
 @RequiredArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
     private final User user;
+    private boolean mfaVerified = false;
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getUserRoles().stream()
@@ -62,7 +64,14 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getStatus() == UserStatus.ACTIVE;
+        return user.getStatus() == UserStatus.ACTIVE &&
+                (!isMfaRequired() || mfaVerified);
+    }
+    public boolean isMfaVerified() {
+        return mfaVerified;
+    }
+    public boolean isMfaRequired() {
+        return user.getMfaSettings() != null && user.getMfaSettings().isEnabled();
     }
 }
 

@@ -27,7 +27,11 @@ public enum ExceptionPayloadFactory {
     AUDIT_LOG_NOT_FOUND(8, HttpStatus.NOT_FOUND, "audit.log.not.found"),
     USER_NOT_ACTIVE(9, HttpStatus.FORBIDDEN, "user.not.active"),
     AUTHENTICATION_FAILED(10, HttpStatus.UNAUTHORIZED, "authentication.failed"),
-    FAILED_TO_SEND_EMAIL(11, HttpStatus.FAILED_DEPENDENCY, "failed.to.send.email");
+    FAILED_TO_SEND_EMAIL(11, HttpStatus.FAILED_DEPENDENCY, "failed.to.send.email"),
+    MFA_NOT_SET_UP(12, HttpStatus.BAD_REQUEST, "mfa.not.set.up"),
+    INVALID_MFA_CODE(13, HttpStatus.UNAUTHORIZED, "invalid.mfa.code"),
+    MFA_NOT_ENABLED(14, HttpStatus.FORBIDDEN, "mfa.not.enabled"),
+    INVALID_MFA_CHALLENGE(15, HttpStatus.GONE, "invalid.or.expired.mfa.challenge");
 
     private final Integer code;
     private final HttpStatus status;

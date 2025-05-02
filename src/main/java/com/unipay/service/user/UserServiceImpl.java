@@ -8,6 +8,7 @@ import com.unipay.enums.UserStatus;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.helper.UserRegistrationHelper;
+import com.unipay.models.MFASettings;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
 import com.unipay.models.UserSettings;
@@ -74,6 +75,7 @@ public class UserServiceImpl implements UserService {
         checkIfUserExists(command);
 
         User user = createUserEntity(command);
+        initializeMfaSettings(user);
         roleService.assignRoleToUser(user, RoleName.USER);
 
         registrationHelper.associateUserProfileAndSettings(user, command);
@@ -86,6 +88,12 @@ public class UserServiceImpl implements UserService {
         emailService.sendConfirmationEmail(user);
         user.setStatus(UserStatus.PENDING);
         return user;
+    }
+    private void initializeMfaSettings(User user) {
+        MFASettings mfaSettings = new MFASettings();
+        mfaSettings.setEnabled(false);
+        mfaSettings.setUser(user);
+        user.setMfaSettings(mfaSettings);
     }
     private User createUserEntity(UserRegisterCommand command) {
         User user = User.create(command);

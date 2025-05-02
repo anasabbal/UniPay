@@ -1,7 +1,6 @@
 package com.unipay.security;
 
-import com.unipay.exception.BusinessException;
-import com.unipay.exception.ExceptionPayloadFactory;
+import com.unipay.models.User;
 import com.unipay.payload.UserDetailsImpl;
 import com.unipay.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +21,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.info("Attempting to load user by email: {}", email);
-        return userRepository.findByEmail(email)
-                .map(UserDetailsImpl::new)
-                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+        User user = userRepository.findByEmailWithRolesAndPermissions(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        return new UserDetailsImpl(user);
     }
 }

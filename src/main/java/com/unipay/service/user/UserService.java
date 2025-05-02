@@ -48,4 +48,5 @@ public interface UserService {
     User create(final UserRegisterCommand command, HttpServletRequest request);
     User getUserById(String userId);
     Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria);
+    User findByEmailWithRolesAndPermissions(String email);
 }

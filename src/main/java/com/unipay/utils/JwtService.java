@@ -1,5 +1,6 @@
 package com.unipay.utils;
 
+import com.unipay.payload.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -32,23 +33,43 @@ public class JwtService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
-    public TokenPair generateTokenPair(UserDetails userDetails) {
-        return new TokenPair(
-                buildAccessToken(userDetails),
-                buildRefreshToken(userDetails)
+    @Value("${jwt.mfa-challenge-expiration}")
+    private long mfaChallengeExpiration;
+
+    public JwtTokenPair generateTokenPair(UserDetailsImpl userDetails, String sessionId) {
+        return new JwtTokenPair(
+                buildAccessToken(userDetails, sessionId),
+                buildRefreshToken(userDetails, sessionId)
         );
     }
 
-    private String buildAccessToken(UserDetails userDetails) {
+    public String generateMfaChallengeToken(UserDetailsImpl userDetails) {
+        return Jwts.builder()
+                .setHeaderParam("typ", TOKEN_TYPE)
+                .setIssuer(TOKEN_ISSUER)
+                .setSubject(userDetails.getUsername())
+                .claim("mfaChallenge", true)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + mfaChallengeExpiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    private String buildAccessToken(UserDetailsImpl userDetails, String sessionId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("authorities", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList());
+        claims.put("sessionId", sessionId);
+        claims.put("mfaEnabled", userDetails.isMfaRequired());
+
         return buildToken(claims, userDetails, accessTokenExpiration);
     }
 
-    private String buildRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, refreshTokenExpiration);
+    private String buildRefreshToken(UserDetailsImpl userDetails, String sessionId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sessionId", sessionId);
+        return buildToken(claims, userDetails, refreshTokenExpiration);
     }
 
     private String buildToken(Map<String, Object> claims, UserDetails userDetails, long expiration) {
@@ -62,15 +83,33 @@ public class JwtService {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    public String extractSessionId(String token) {
+        return extractClaim(token, claims -> claims.get("sessionId", String.class));
+    }
+
+    public boolean isMfaChallengeToken(String token) {
+        return extractClaim(token, claims -> claims.get("mfaChallenge", Boolean.class)) != null;
+    }
+
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+            return username.equals(userDetails.getUsername())
+                    && !isTokenExpired(token)
+                    && validateSession(token);
         } catch (JwtException e) {
             return false;
         }
     }
 
+    private boolean validateSession(String token) {
+        String sessionId = extractSessionId(token);
+        // Add session validation logic here (check against session repository)
+        return sessionId != null; // Simplified for example
+    }
+
+    // Existing helper methods remain the same
     public String extractUsername(String token) throws JwtException {
         return extractClaim(token, Claims::getSubject);
     }
@@ -79,6 +118,7 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
+
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
@@ -100,5 +140,9 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public record TokenPair(String accessToken, String refreshToken) {}
+    public boolean isMfaVerified(String token) {
+        return extractClaim(token, claims -> claims.get("mfaVerified", Boolean.class));
+    }
+
+    public record JwtTokenPair(String accessToken, String refreshToken) {}
 }

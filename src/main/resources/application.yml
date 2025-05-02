@@ -43,6 +43,7 @@ jwt:
   secret: QkZDa0Z3S3dZalZ3YnhNU2h4T2dUYUJ3U2NhVGxLQ3RtU1h3QmFsRVRPbXlXR1pU
   access-token-expiration: 900000    # 15 minutes
   refresh-token-expiration: 604800000 # 7 days
+  mfa-challenge-expiration: 300000
 
 # Custom application settings
 application:

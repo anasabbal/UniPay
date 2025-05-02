@@ -7,6 +7,8 @@ import com.unipay.response.LoginResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface AuthenticationService {
-    User register(UserRegisterCommand command, HttpServletRequest request);
+    void register(UserRegisterCommand command, HttpServletRequest request);
     LoginResponse login(LoginCommand command, HttpServletRequest request);
+    User getCurrentUser();
+    LoginResponse verifyMfa(String challengeToken, String code, HttpServletRequest request);
 }

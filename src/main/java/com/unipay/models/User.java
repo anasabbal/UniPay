@@ -3,10 +3,7 @@ package com.unipay.models;
 import com.unipay.command.UserRegisterCommand;
 import com.unipay.enums.UserStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +30,7 @@ import java.util.Set;
  * about the user’s account, authentication, and associated information. It supports user registration,
  * login history tracking, and role management, among other features.
  */
+@Builder
 @Entity
 @Table(name = "users")
 @Getter
@@ -114,6 +112,33 @@ public class User extends BaseEntity {
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<AuditLog> auditLogs = new HashSet<>();
+
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private MFASettings mfaSettings;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserSession> sessions = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Consent> consents = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "merchant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Transaction> transactions = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ApiKey> apiKeys = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Webhook> webhooks = new HashSet<>();
 
     /**
      * Creates a new {@link User} instance from the provided {@link UserRegisterCommand}.

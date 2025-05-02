@@ -8,6 +8,7 @@ import com.unipay.enums.UserStatus;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.helper.UserRegistrationHelper;
+import com.unipay.models.MFASettings;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
 import com.unipay.models.UserSettings;
@@ -74,6 +75,7 @@ public class UserServiceImpl implements UserService {
         checkIfUserExists(command);
 
         User user = createUserEntity(command);
+        initializeMfaSettings(user);
         roleService.assignRoleToUser(user, RoleName.USER);
 
         registrationHelper.associateUserProfileAndSettings(user, command);
@@ -87,11 +89,27 @@ public class UserServiceImpl implements UserService {
         user.setStatus(UserStatus.PENDING);
         return user;
     }
+    private void initializeMfaSettings(User user) {
+        MFASettings mfaSettings = new MFASettings();
+        mfaSettings.setEnabled(false);
+        mfaSettings.setUser(user);
+        user.setMfaSettings(mfaSettings);
+    }
     private User createUserEntity(UserRegisterCommand command) {
         User user = User.create(command);
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         return userRepository.saveAndFlush(user);
     }
+
+    @Override
+    public User findByEmailWithRolesAndPermissions(String email) {
+        log.info("Begin fetching user with email {}", email);
+        final User user =  userRepository.findByEmailWithRolesAndPermissions(email)
+                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+        log.info("User with email {} fetched successfully", user.getEmail());
+        return user;
+    }
+
     /**
      * Check if a user already exists by email or username.
      *

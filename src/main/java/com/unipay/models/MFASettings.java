@@ -22,7 +22,7 @@ public class MFASettings extends BaseEntity{
     private String secret; // Base32 encoded TOTP secret
 
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @ElementCollection

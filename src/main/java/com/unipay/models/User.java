@@ -113,7 +113,11 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<AuditLog> auditLogs = new HashSet<>();
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private MFASettings mfaSettings;
 
     @Builder.Default

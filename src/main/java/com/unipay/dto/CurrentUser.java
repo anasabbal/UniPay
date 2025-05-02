@@ -35,4 +35,14 @@ public class CurrentUser extends BaseEntityDto{
      * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
      */
     private Set<UserRoleDto> userRoles;
+    private MFASettingsDto mfaSettings;
+    private Set<UserSessionDto> sessions;
+    private BusinessDto business;
+    // Payment Operations
+    private PayoutSettingsDto payoutSettings;
+    private Set<TransactionDto> transactions;
+
+    // Developer Integration
+    private Set<ApiKeyDto> apiKeys;
+    private Set<WebhookDto> webhooks;
 }

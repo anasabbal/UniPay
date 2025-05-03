@@ -13,6 +13,7 @@ import com.unipay.models.UserSession;
 import com.unipay.payload.UserDetailsImpl;
 import com.unipay.repository.UserRepository;
 import com.unipay.response.LoginResponse;
+import com.unipay.security.UserDetailsServiceImpl;
 import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.login_histroy.LoginHistoryService;
 import com.unipay.service.mfa.MFAService;
@@ -31,6 +32,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +51,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserSessionService userSessionService;
     private final LoginHistoryService loginHistoryService;
     private final AuthenticationManager authenticationManager;
+    private final UserDetailsServiceImpl userDetailsService;
 
 
 
@@ -74,7 +77,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return LoginResponse.mfaRequired(challengeToken);
             }
 
-            // Regular login flow
             UserSession session = createUserSession(user, request);
             logSuccessfulLogin(user, request);
             return createLoginResponse((UserDetailsImpl) authentication.getPrincipal(), session);
@@ -94,13 +96,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
+    @Auditable(action = "MFA_VERIFICATION")
     public LoginResponse verifyMfa(String challengeToken, String code, HttpServletRequest request) {
         try {
-            // Validate challenge token
+            // Validate challenge token format
             if (!jwtService.isMfaChallengeToken(challengeToken)) {
                 throw new BusinessException(ExceptionPayloadFactory.INVALID_MFA_CHALLENGE.get());
             }
 
+            // Extract user from challenge token
             String email = jwtService.extractUsername(challengeToken);
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
@@ -111,11 +115,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         ExceptionPayloadFactory.INVALID_MFA_CODE);
             }
 
-            // Complete login
+            // Create session and mark MFA verified
             UserSession session = createUserSession(user, request);
             logSuccessfulLogin(user, request);
 
-            UserDetailsImpl userDetails = new UserDetailsImpl(user);
+            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(email);
             userDetails.setMfaVerified(true);
 
             return createLoginResponse(userDetails, session);
@@ -132,6 +136,38 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         user.getSessions().add(session);
         return session;
+    }
+    @Override
+    @Transactional
+    @Auditable(action = "TOKEN_REFRESH")
+    public LoginResponse refreshToken(String refreshToken, HttpServletRequest request) {
+        try {
+            // Validate refresh token format
+            if (!jwtService.isRefreshToken(refreshToken)) {
+                throw new BusinessException(ExceptionPayloadFactory.INVALID_TOKEN.get());
+            }
+
+            // Extract session ID and validate
+            String sessionId = jwtService.extractSessionId(refreshToken);
+            if (!userSessionService.isSessionValid(sessionId)) {
+                throw new BusinessException(ExceptionPayloadFactory.INVALID_SESSION.get());
+            }
+
+            // Get user details
+            String email = jwtService.extractUsername(refreshToken);
+            UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(email);
+
+            // Generate new token pair
+            return LoginResponse.success(
+                    jwtService.generateTokenPair(userDetails, sessionId),
+                    userDetails.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .collect(Collectors.toList())
+            );
+
+        } catch (JwtException | UsernameNotFoundException e) {
+            throw new BusinessException(ExceptionPayloadFactory.INVALID_TOKEN.get());
+        }
     }
 
     @Override

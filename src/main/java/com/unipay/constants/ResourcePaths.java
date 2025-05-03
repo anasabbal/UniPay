@@ -8,4 +8,6 @@ public class ResourcePaths {
     public static final String LOGIN = "/login";
     public static final String AUTH= "/auth";
     public static final String CURRENT= "/current";
+    public static final String MFA_VERIFY = "/mfa/verify";
+    public static final String REFRESH = "/refresh";
 }

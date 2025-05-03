@@ -31,7 +31,9 @@ public enum ExceptionPayloadFactory {
     MFA_NOT_SET_UP(12, HttpStatus.BAD_REQUEST, "mfa.not.set.up"),
     INVALID_MFA_CODE(13, HttpStatus.UNAUTHORIZED, "invalid.mfa.code"),
     MFA_NOT_ENABLED(14, HttpStatus.FORBIDDEN, "mfa.not.enabled"),
-    INVALID_MFA_CHALLENGE(15, HttpStatus.GONE, "invalid.or.expired.mfa.challenge");
+    INVALID_MFA_CHALLENGE(15, HttpStatus.GONE, "invalid.or.expired.mfa.challenge"),
+    INVALID_SESSION(16, HttpStatus.UNAUTHORIZED, "invalid.or.expired.session"),
+    INVALID_TOKEN(17,HttpStatus.UNAUTHORIZED, "invalid.or.malformed.token");
 
     private final Integer code;
     private final HttpStatus status;

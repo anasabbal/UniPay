@@ -11,4 +11,5 @@ public interface AuthenticationService {
     LoginResponse login(LoginCommand command, HttpServletRequest request);
     User getCurrentUser();
     LoginResponse verifyMfa(String challengeToken, String code, HttpServletRequest request);
+    LoginResponse refreshToken(String refreshToken, HttpServletRequest request);
 }

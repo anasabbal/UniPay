@@ -37,10 +37,17 @@ public class JwtService {
     private long mfaChallengeExpiration;
 
     public JwtTokenPair generateTokenPair(UserDetailsImpl userDetails, String sessionId) {
-        return new JwtTokenPair(
-                buildAccessToken(userDetails, sessionId),
-                buildRefreshToken(userDetails, sessionId)
-        );
+        String accessToken = buildAccessToken(userDetails, sessionId);
+        String refreshToken = buildRefreshToken(userDetails, sessionId);
+        return new JwtTokenPair(accessToken, refreshToken);
+    }
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.containsKey("refresh") && claims.get("refresh", Boolean.class);
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
     public String generateMfaChallengeToken(UserDetailsImpl userDetails) {
@@ -69,6 +76,7 @@ public class JwtService {
     private String buildRefreshToken(UserDetailsImpl userDetails, String sessionId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sessionId", sessionId);
+        claims.put("refresh", true);
         return buildToken(claims, userDetails, refreshTokenExpiration);
     }
 

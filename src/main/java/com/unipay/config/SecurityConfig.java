@@ -1,67 +1,71 @@
 package com.unipay.config;
 
-import com.unipay.security.SessionValidationFilter;
-import com.unipay.security.UserDetailsServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.unipay.security.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final SessionValidationFilter sessionValidationFilter;
-    private final UserDetailsServiceImpl userDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final SessionValidationFilter sessionValidationFilter;
+    private final UserIdAuthorizationManager userIdAuthorizationManager;
+    private final HandlerMappingIntrospector introspector;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
+
         return http
-                // disable CSRF for stateless authentication (API-based applications)
-                .csrf(csrf -> csrf.disable())
-
-                // configure session management as stateless (for APIs)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // authorization configuration
                 .authorizeHttpRequests(auth -> auth
-                        // public paths that do not require authentication
                         .requestMatchers(
-                                "/v1/auth/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/webjars/**",
-                                "/swagger-resources/**"
+                                mvc.pattern("/v1/auth/**"),
+                                mvc.pattern("/swagger-ui/**"),
+                                mvc.pattern("/v3/api-docs/**")
                         ).permitAll()
-
-                        // specific endpoint protections based on roles
-                        .requestMatchers("/v1/users/{userId}/mfa/**").hasAuthority("ROLE_USER")
-                        .requestMatchers("/v1/admin/**").hasAuthority("ROLE_ADMIN")
-
-                        // any other request requires authentication
+                        .requestMatchers(mvc.pattern("/v1/users/{userId}/mfa/**"))
+                        .access(userIdAuthorizationManager)
                         .anyRequest().authenticated()
                 )
-
-                // set authentication provider to use the custom user details service
-                .authenticationProvider(authenticationProvider())
-
-                // add custom session validation filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(sessionValidationFilter, UsernamePasswordAuthenticationFilter.class)
-
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .build();
     }
     // configure CORS if needed (example for handling front-end and back-end communication)
@@ -73,6 +77,17 @@ public class SecurityConfig {
                 "/swagger-resources/**",
                 "/webjars/**"
         );
+    }
+    @Bean
+    AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            new ObjectMapper().writeValue(response.getWriter(), Map.of(
+                    "error", "Forbidden",
+                    "message", accessDeniedException.getMessage()
+            ));
+        };
     }
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

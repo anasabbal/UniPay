@@ -94,4 +94,11 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
            WHERE u.id = :userId
            """)
     Optional<User> findByIdWithMfaSettings(@Param("userId") String userId);
+
+    @Query("SELECT u FROM User u " +
+            "LEFT JOIN FETCH u.userRoles ur " +
+            "LEFT JOIN FETCH ur.role r " +
+            "LEFT JOIN FETCH r.permissions " +
+            "WHERE u.id = :userId")
+    Optional<User> findByIdWithRoles(@Param("userId") String userId);
 }

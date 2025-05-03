@@ -4,6 +4,7 @@ import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.exception.QrGenerationException;
 import com.unipay.models.User;
+import com.unipay.payload.UserDetailsImpl;
 import com.unipay.service.mfa.MFAService;
 import com.unipay.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -45,9 +47,10 @@ public class MFAController {
     public void enableMfa(
             @PathVariable String userId,
             @RequestBody String code,
-            @AuthenticationPrincipal User currentUser
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         try {
+            validateUserAccess(userId, userDetails);
             User user = userService.getUserById(userId);
             mfaService.enableMfa(user, code);
         } catch (BusinessException e) {
@@ -108,13 +111,14 @@ public class MFAController {
                     @ApiResponse(responseCode = "403", description = "Access denied")
             }
     )
-    @PreAuthorize("#userId == principal.id")
+    @PreAuthorize("hasAuthority('ROLE_USER') and #userId == principal.id")
     public RecoveryCodesResponse generateRecoveryCodes(
             @PathVariable String userId,
-            @AuthenticationPrincipal User currentUser
+            @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         try {
-            User user = userService.getUserById(userId);
+            validateUserAccess(userId, userDetails);
+            final User user = userDetails.getUser();
             List<String> codes = mfaService.generateRecoveryCodes(user);
             return new RecoveryCodesResponse(codes);
         } catch (BusinessException e) {
@@ -141,6 +145,11 @@ public class MFAController {
             throw new BusinessException(ExceptionPayloadFactory.MFA_NOT_ENABLED.get());
         }
         return new RecoveryCodesResponse(user.getMfaSettings().getRecoveryCodes().size());
+    }
+    private void validateUserAccess(String userId, UserDetailsImpl userDetails) {
+        if (!userDetails.getId().equals(userId)) {
+            throw new AccessDeniedException("Unauthorized access attempt");
+        }
     }
 
     // DTOs

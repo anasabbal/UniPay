@@ -49,4 +49,5 @@ public interface UserService {
     User getUserById(String userId);
     Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria);
     User findByEmailWithRolesAndPermissions(String email);
+    User getUserByIdWithRoles(String userId);
 }

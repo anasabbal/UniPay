@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -29,11 +28,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                // disable CSRF for stateless authentication (API-based applications)
+                .csrf(csrf -> csrf.disable())
+
+                // configure session management as stateless (for APIs)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // authorization configuration
                 .authorizeHttpRequests(auth -> auth
+                        // public paths that do not require authentication
                         .requestMatchers(
                                 "/v1/auth/**",
                                 "/swagger-ui.html",
@@ -42,14 +47,24 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/swagger-resources/**"
                         ).permitAll()
+
+                        // specific endpoint protections based on roles
+                        .requestMatchers("/v1/users/{userId}/mfa/**").hasAuthority("ROLE_USER")
+                        .requestMatchers("/v1/admin/**").hasAuthority("ROLE_ADMIN")
+
+                        // any other request requires authentication
                         .anyRequest().authenticated()
                 )
+
+                // set authentication provider to use the custom user details service
                 .authenticationProvider(authenticationProvider())
+
+                // add custom session validation filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(sessionValidationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(sessionValidationFilter, SessionValidationFilter.class)
+
                 .build();
     }
-
+    // configure CORS if needed (example for handling front-end and back-end communication)
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
@@ -59,12 +74,10 @@ public class SecurityConfig {
                 "/webjars/**"
         );
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();

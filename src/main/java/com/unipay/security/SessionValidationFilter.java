@@ -41,22 +41,22 @@ public class SessionValidationFilter extends OncePerRequestFilter {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
 
-                // Validate session ID
+                // validate session ID
                 String sessionId = jwtService.extractSessionId(token);
                 if (sessionId == null || !userSessionService.isSessionValid(sessionId)) {
                     throw new JwtException("Invalid or expired session");
                 }
 
-                // Load user details
+                // load user details
                 String username = jwtService.extractUsername(token);
                 UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(username);
 
-                // Validate MFA status
+                // validate MFA status
                 if (userDetails.isMfaRequired() && !userDetails.isMfaVerified()) {
                     throw new JwtException("MFA verification required");
                 }
 
-                // Set authentication context
+                // set authentication context
                 if (jwtService.isTokenValid(token, userDetails)) {
                     setSecurityContextAuthentication(userDetails, request);
                 }
@@ -70,13 +70,13 @@ public class SessionValidationFilter extends OncePerRequestFilter {
     private void handleError(HttpServletResponse response,
                              int statusCode,
                              String message) throws IOException {
-        // 1. Clear security context
+        // clear security context
         SecurityContextHolder.clearContext();
 
-        // 2. Send standardized error response
+        // send standardized error response //
         response.sendError(statusCode, message);
 
-        // 3. Optional: Add security headers
+        // optional: Add security headers
         response.setHeader("WWW-Authenticate", "Bearer error=\"invalid_token\"");
     }
     private void processJwtToken(String jwt, HttpServletRequest request) {

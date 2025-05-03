@@ -55,12 +55,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
 
+    /**
+     * Registers a new user by calling the UserService and creating a registration record.
+     *
+     * @param command The registration command containing the user's information.
+     * @param request The HTTP request, used to fetch session-related information.
+     */
     @Override
     @Auditable(action = "USER_REGISTRATION")
     public void register(UserRegisterCommand command, HttpServletRequest request) {
         userService.create(command, request);
     }
 
+    /**
+     * Authenticates the user based on their login credentials and manages MFA flow if enabled.
+     *
+     * @param command The login command containing user credentials.
+     * @param request The HTTP request, used to fetch session-related information.
+     * @return A login response containing the authentication tokens or an error response.
+     */
     @Override
     @Transactional
     @Auditable(action = "USER_LOGIN")
@@ -93,7 +106,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         return LoginResponse.error();
     }
-
+    /**
+     * Verifies the MFA code and finalizes the user authentication process.
+     *
+     * @param challengeToken The MFA challenge token.
+     * @param code The MFA verification code.
+     * @param request The HTTP request to fetch session-related information.
+     * @return A login response containing the authentication tokens or an error response.
+     */
     @Override
     @Transactional
     @Auditable(action = "MFA_VERIFICATION")
@@ -128,15 +148,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new BusinessException(ExceptionPayloadFactory.INVALID_MFA_CHALLENGE.get());
         }
     }
-    private UserSession createUserSession(User user, HttpServletRequest request) {
-        UserSession session = userSessionService.createSession(
-                user,
-                request.getHeader("User-Agent"),
-                request.getRemoteAddr()
-        );
-        user.getSessions().add(session);
-        return session;
-    }
+    /**
+     * Refreshes the authentication token using the provided refresh token.
+     *
+     * @param refreshToken The refresh token provided by the client.
+     * @param request The HTTP request to fetch session-related information.
+     * @return A login response containing new authentication tokens.
+     */
     @Override
     @Transactional
     @Auditable(action = "TOKEN_REFRESH")
@@ -169,7 +187,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new BusinessException(ExceptionPayloadFactory.INVALID_TOKEN.get());
         }
     }
-
+    /**
+     * Retrieves the current authenticated user from the security context.
+     *
+     * @return The currently authenticated user.
+     */
     @Override
     @Transactional
     public User getCurrentUser() {
@@ -177,7 +199,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Authentication: {}", authentication);
         return userService.findByEmailWithRolesAndPermissions(authentication.getName());
     }
-
+    private UserSession createUserSession(User user, HttpServletRequest request) {
+        UserSession session = userSessionService.createSession(
+                user,
+                request.getHeader("User-Agent"),
+                request.getRemoteAddr()
+        );
+        user.getSessions().add(session);
+        return session;
+    }
     private Authentication attemptAuthentication(LoginCommand command) {
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -186,19 +216,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 )
         );
     }
-
     private User getAuthenticatedUser(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
     }
-
     private void validateUserStatus(User user) {
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new DisabledException("User account is not active");
         }
     }
-
     private void logSuccessfulLogin(User user, HttpServletRequest request) {
         loginHistoryService.createLoginHistory(user, request, true);
         auditLogService.createAuditLog(
@@ -207,7 +234,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "Successful login"
         );
     }
-
     private LoginResponse createLoginResponse(UserDetailsImpl userDetails, UserSession session) {
         return LoginResponse.success(
                 jwtService.generateTokenPair(userDetails, session.getId()),
@@ -216,7 +242,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .collect(Collectors.toList())
         );
     }
-
     private void handleAuthenticationFailure(String email, HttpServletRequest request,
                                              String reason, ExceptionPayloadFactory payload) {
         userRepository.findByEmail(email).ifPresent(user -> {

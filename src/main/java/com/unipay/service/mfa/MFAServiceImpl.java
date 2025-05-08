@@ -5,6 +5,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.unipay.constants.Constants;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.exception.QrGenerationException;
@@ -33,14 +34,12 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.unipay.constants.Constants.*;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MFAServiceImpl implements MFAService {
-
-    private static final int RECOVERY_CODE_COUNT = 10;
-    private static final int RECOVERY_CODE_LENGTH = 6;
-    private static final int QR_IMAGE_SIZE = 250;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -147,8 +146,6 @@ public class MFAServiceImpl implements MFAService {
         }
         return false;
     }
-
-    // --- Private Utilities ---
 
     private String getOrGenerateSecret(User user) {
         MFASettings settings = user.getMfaSettings();

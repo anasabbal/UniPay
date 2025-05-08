@@ -1,9 +1,15 @@
 package com.unipay.service.profile;
 
+import com.unipay.command.CreateAddressCommand;
 import com.unipay.command.ProfileCommand;
+import com.unipay.models.Address;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
+import com.unipay.repository.AddressRepository;
 import com.unipay.repository.UserProfileRepository;
+import com.unipay.service.address.AddressService;
+import com.unipay.service.address.AddressServiceImpl;
+import com.unipay.service.authentication.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +46,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     /**
      * Repository for accessing and persisting {@link UserProfile} entities.
      */
+    private final AuthenticationService authenticationService;
+    private final AddressRepository addressRepository;
     private final UserProfileRepository userProfileRepository;
 
     /**
@@ -60,10 +68,17 @@ public class UserProfileServiceImpl implements UserProfileService {
         log.debug("Start creating User profile for user {}", user.getId());
 
         UserProfile userProfile = UserProfile.create(profileCommand);
-        userProfile.setUser(user);  // Link the user
+        userProfile.setUser(user);
 
         userProfile = userProfileRepository.save(userProfile);
         log.info("User profile created successfully with ID {}", userProfile.getId());
         return userProfile;
+    }
+
+    @Override
+    public void addAddress(CreateAddressCommand addressCommand) {
+        final UserProfile userProfile = authenticationService.getCurrentUser().getProfile();
+        final Address address = userProfile.addAddress(addressCommand);
+        addressRepository.save(address);
     }
 }

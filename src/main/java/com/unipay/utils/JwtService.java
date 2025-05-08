@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -65,8 +66,7 @@ public class JwtService {
     private String buildAccessToken(UserDetailsImpl userDetails, String sessionId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("authorities", userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList());
+                .map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
         claims.put("sessionId", sessionId);
         claims.put("mfaEnabled", userDetails.isMfaRequired());
 
@@ -127,7 +127,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 

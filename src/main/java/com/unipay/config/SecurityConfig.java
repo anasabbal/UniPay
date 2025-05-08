@@ -79,17 +79,6 @@ public class SecurityConfig {
         );
     }
     @Bean
-    AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, accessDeniedException) -> {
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            new ObjectMapper().writeValue(response.getWriter(), Map.of(
-                    "error", "Forbidden",
-                    "message", accessDeniedException.getMessage()
-            ));
-        };
-    }
-    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }

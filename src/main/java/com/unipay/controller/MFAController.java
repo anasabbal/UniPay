@@ -98,7 +98,7 @@ public class MFAController {
         } catch (IOException | BusinessException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to generate QR code");
         } catch (QrGenerationException e) {
-            throw new RuntimeException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "QR code generation failed", e);
         }
     }
 

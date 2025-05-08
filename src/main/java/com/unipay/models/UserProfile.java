@@ -1,5 +1,6 @@
 package com.unipay.models;
 
+import com.unipay.command.CreateAddressCommand;
 import com.unipay.command.ProfileCommand;
 import com.unipay.enums.UserGender;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents the extended profile information of a user.
@@ -110,5 +112,14 @@ public class UserProfile extends BaseEntity {
         userProfile.nationality = command.getNationality();
 
         return userProfile;
+    }
+    public Address addAddress(final CreateAddressCommand command){
+        final Address address = Address.create(command);
+
+        address.linkToProfile(this);
+        return address;
+    }
+    public static Set<Address> createAddress(final Set<CreateAddressCommand> addressCommands){
+        return addressCommands.stream().map(Address::create).collect(Collectors.toSet());
     }
 }

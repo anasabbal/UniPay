@@ -1,9 +1,10 @@
 package com.unipay.models;
 
+import com.unipay.command.CreateAddressCommand;
 import com.unipay.enums.AddressType;
+import com.unipay.enums.Country;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * Represents a physical address associated with a user's profile.
@@ -15,9 +16,11 @@ import lombok.Setter;
  * @see AddressType
  */
 @Entity
-@Table(name = "addresses")
 @Getter
 @Setter
+@Table(name = "addresses")
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class Address extends BaseEntity {
 
     /**
@@ -52,7 +55,8 @@ public class Address extends BaseEntity {
     /**
      * The country of the address.
      */
-    private String country;
+    @Enumerated(EnumType.STRING)
+    private Country country;
 
     /**
      * The type of address (e.g., billing, shipping).
@@ -60,4 +64,19 @@ public class Address extends BaseEntity {
      */
     @Enumerated(EnumType.STRING)
     private AddressType addressType;
+
+    public static Address create(final CreateAddressCommand command){
+        final Address address = new Address();
+
+        address.street = command.getStreet();
+        address.city = command.getCity();
+        address.state = command.getState();
+        address.zipCode = command.getZipCode();
+        address.country = Country.valueOf(command.getCountry());
+
+        return address;
+    }
+    public void linkToProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
+    }
 }

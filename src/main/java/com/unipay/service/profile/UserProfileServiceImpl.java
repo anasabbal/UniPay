@@ -2,6 +2,8 @@ package com.unipay.service.profile;
 
 import com.unipay.command.CreateAddressCommand;
 import com.unipay.command.ProfileCommand;
+import com.unipay.exception.BusinessException;
+import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.models.Address;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
@@ -73,10 +75,23 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfile;
     }
 
+    /**
+     * Adds a new address using the provided command data.
+     *
+     * @param addressCommand The command object containing the details required to create the address.
+     * @throws BusinessException If address creation fails due to validation or processing errors.
+     */
     @Override
     public void addAddress(CreateAddressCommand addressCommand) {
-        final UserProfile userProfile = authenticationService.getCurrentUser().getProfile();
-        final Address address = userProfile.addAddress(addressCommand);
-        addressRepository.save(address);
+        User currentUser = authenticationService.getCurrentUser();
+        UserProfile profile = currentUser.getProfile();
+
+        if (profile == null) {
+            throw new BusinessException(ExceptionPayloadFactory.USER_PROFILE_NOT_FOUND.get());
+        }
+
+        Address newAddress = profile.addAddress(addressCommand);
+        addressRepository.save(newAddress);
     }
+
 }

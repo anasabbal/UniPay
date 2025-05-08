@@ -37,4 +37,5 @@ public class JavaConfig {
                 .addSecurityItem(new SecurityRequirement().addList("JWT"))
                 .addSecurityItem(new SecurityRequirement().addList("MFA"));
     }
+
 }

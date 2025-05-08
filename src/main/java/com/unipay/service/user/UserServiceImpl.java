@@ -163,5 +163,11 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), e);
         }
     }
+    @Override
+    @Transactional(readOnly = true)
+    public User getUserByIdWithRoles(String userId) {
+        return userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+    }
 
 }

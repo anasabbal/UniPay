@@ -1,15 +1,24 @@
 package com.unipay.dto;
 
-
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
+/**
+ * Stores payout configuration for users or businesses.
+ */
 @Data
-@Getter
-@Setter
 public class PayoutSettingsDto {
-    private String bankAccount; // encrypted
+    /**
+     * Bank account identifier (encrypted) where payouts are sent.
+     */
+    private String bankAccount;
+
+    /**
+     * Preferred payout currency (e.g., USD, EUR).
+     */
     private String currency;
+
+    /**
+     * Scheduled frequency of payouts (e.g., DAILY, WEEKLY).
+     */
     private String schedule;
 }

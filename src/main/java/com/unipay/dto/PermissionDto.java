@@ -1,15 +1,20 @@
 package com.unipay.dto;
 
-
 import com.unipay.enums.PermissionName;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
+/**
+ * Represents a specific permission in the system, part of role-based access control (RBAC).
+ */
 @Data
-@Getter
-@Setter
-public class PermissionDto extends BaseEntityDto{
+public class PermissionDto extends BaseEntityDto {
+    /**
+     * Enum value representing the system permission name.
+     */
     private PermissionName name;
+
+    /**
+     * A human-readable description of what this permission allows.
+     */
     private String description;
 }

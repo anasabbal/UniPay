@@ -24,4 +24,5 @@ public class UserSession extends BaseEntity{
     private Instant expiresAt;
     @ManyToOne
     private User user;
+    private boolean valid;
 }

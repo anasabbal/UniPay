@@ -17,6 +17,8 @@ import java.util.Set;
  * - `passwordHash`: The hashed password for secure authentication.
  * - `profile`: A reference to the user's profile data (e.g., full name, date of birth).
  * - `settings`: A reference to the user's settings (e.g., language, timezone, email notifications).
+ * - `loginHistories`: Historical records of the user's login attempts.
+ * - `auditLogs`: Logs of actions performed by the user within the system for security and auditing.
  *
  * This class uses Lombok annotations to automatically generate getters, setters, and other boilerplate code.
  *
@@ -26,7 +28,7 @@ import java.util.Set;
 @Data
 @Getter
 @Setter
-public class UserDto extends BaseEntityDto{
+public class UserDto extends BaseEntityDto {
     /**
      * The username of the user. It must be unique and can be used for logging in.
      */
@@ -42,11 +44,13 @@ public class UserDto extends BaseEntityDto{
      * for authentication purposes.
      */
     private String passwordHash;
+
     /**
      * Records of the user's login attempts.
      * This is useful for auditing and tracking user login patterns for security purposes.
      */
     private Set<LoginHistoryDto> loginHistories;
+
     /**
      * Logs of actions performed by the user within the system, including administrative actions.
      * This allows for tracking user activities for security and auditing purposes.
@@ -63,19 +67,49 @@ public class UserDto extends BaseEntityDto{
      * The user's settings, such as their preferred language, timezone, and notification preferences.
      */
     private UserSettingsDto settings;
+
     /**
      * The set of roles assigned to the user.
      * This relationship supports role-based access control (RBAC), defining what actions the user can perform.
      */
     private Set<UserRoleDto> userRoles;
+
+    /**
+     * MFA (Multi-factor authentication) settings for the user.
+     * This includes whether MFA is enabled, the secret key, and recovery codes.
+     */
     private MFASettingsDto mfaSettings;
+
+    /**
+     * User sessions associated with the user. This helps in tracking active sessions.
+     */
     private Set<UserSessionDto> sessions;
+
+    /**
+     * Business details related to the user.
+     * This may contain the business registration and verification details.
+     */
     private BusinessDto business;
+
     // Payment Operations
+    /**
+     * User payout settings, including bank account details and payout schedule.
+     */
     private PayoutSettingsDto payoutSettings;
+
+    /**
+     * List of transactions associated with the user.
+     */
     private Set<TransactionDto> transactions;
 
     // Developer Integration
+    /**
+     * API keys assigned to the user for system integration.
+     */
     private Set<ApiKeyDto> apiKeys;
+
+    /**
+     * Webhooks set up by the user for event-driven communication with external services.
+     */
     private Set<WebhookDto> webhooks;
 }

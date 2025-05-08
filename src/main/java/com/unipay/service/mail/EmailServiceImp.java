@@ -65,8 +65,8 @@ public class EmailServiceImp implements EmailService{
         User user = userRepository.findByEmail(token.getUser().getEmail())
                 .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
 
-        user.setStatus(UserStatus.ACTIVE);  // ✅ Set status to PENDING
-        userRepository.save(user);           // ✅ Persist the updated user
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
 
         log.info("Email {} verified and status set to PENDING.", user.getEmail());
     }

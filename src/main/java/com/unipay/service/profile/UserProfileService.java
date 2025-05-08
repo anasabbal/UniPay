@@ -1,5 +1,6 @@
 package com.unipay.service.profile;
 
+import com.unipay.command.CreateAddressCommand;
 import com.unipay.command.ProfileCommand;
 import com.unipay.models.User;
 import com.unipay.models.UserProfile;
@@ -32,4 +33,6 @@ public interface UserProfileService {
      * @return A newly created {@link UserProfile} instance associated with the user.
      */
     UserProfile create(final ProfileCommand profileCommand, User user);
+    void addAddress(final CreateAddressCommand addressCommand);
+
 }

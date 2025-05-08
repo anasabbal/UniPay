@@ -10,4 +10,6 @@ public class ResourcePaths {
     public static final String CURRENT= "/current";
     public static final String MFA_VERIFY = "/mfa/verify";
     public static final String REFRESH = "/refresh";
+    public static final String PROFILE = "/profile";
+    public static final String ADDRESS = "/address";
 }

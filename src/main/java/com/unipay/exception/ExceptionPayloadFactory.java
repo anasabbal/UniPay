@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 public enum ExceptionPayloadFactory {
 
     TECHNICAL_ERROR(0, HttpStatus.INTERNAL_SERVER_ERROR, "technical.error"),
-
     INVALID_PAYLOAD(1, HttpStatus.BAD_REQUEST, "invalid.request.payload"),
     MISSING_REQUEST_BODY_ERROR_CODE(2, HttpStatus.BAD_REQUEST, "request.missing.body"),
     USER_NOT_FOUND(3, HttpStatus.NOT_FOUND, "user.not.found"),
@@ -33,7 +32,9 @@ public enum ExceptionPayloadFactory {
     MFA_NOT_ENABLED(14, HttpStatus.FORBIDDEN, "mfa.not.enabled"),
     INVALID_MFA_CHALLENGE(15, HttpStatus.GONE, "invalid.or.expired.mfa.challenge"),
     INVALID_SESSION(16, HttpStatus.UNAUTHORIZED, "invalid.or.expired.session"),
-    INVALID_TOKEN(17,HttpStatus.UNAUTHORIZED, "invalid.or.malformed.token");
+    INVALID_TOKEN(17,HttpStatus.UNAUTHORIZED, "invalid.or.malformed.token"),
+    BUSINESS_NOT_FOUND(18,HttpStatus.NOT_FOUND, "business.not.found"),
+    BUSINESS_FOR_USER_NOT_FOUND(19,HttpStatus.NOT_FOUND, "business.for.user.not.found");
 
     private final Integer code;
     private final HttpStatus status;

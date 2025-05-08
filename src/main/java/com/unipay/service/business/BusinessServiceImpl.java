@@ -56,7 +56,7 @@ public class BusinessServiceImpl implements BusinessService{
         final Business business = findById(id);
         business.update(command);
         business.setUpdatedAt(LocalDateTime.now());
-        businessRepository.save(business);
+        return businessRepository.save(business);
     }
 
     @Override

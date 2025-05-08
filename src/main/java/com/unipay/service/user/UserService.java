@@ -11,19 +11,13 @@ import org.springframework.data.domain.Pageable;
  * Service interface for managing core user operations within the system.
  *
  * <p>This interface defines methods related to the lifecycle of {@link User} entities,
- * primarily focused on user registration and creation workflows.</p>
+ * including creation, retrieval, and filtering.</p>
  *
  * <p>Responsibilities:
  * <ul>
  *   <li>Creating new users based on validated registration commands.</li>
- *   <li>Delegating the actual persistence and additional user-related logic to implementation classes.</li>
- * </ul>
- * </p>
- *
- * <p>Typical use cases include:
- * <ul>
- *   <li>Handling new user registration.</li>
- *   <li>Initiating user-related entities (e.g., profile, settings, roles) during signup.</li>
+ *   <li>Retrieving users by ID, email, or filtered search criteria.</li>
+ *   <li>Supporting user queries with role and permission loading.</li>
  * </ul>
  * </p>
  *
@@ -46,8 +40,37 @@ public interface UserService {
      * @return The newly created and fully initialized {@link User} entity, including the user's profile and settings.
      */
     User create(final UserRegisterCommand command, HttpServletRequest request);
+
+    /**
+     * Retrieves a user entity by its unique identifier.
+     *
+     * @param userId The ID of the user to retrieve.
+     * @return The {@link User} entity matching the provided ID.
+     */
     User getUserById(String userId);
+
+    /**
+     * Returns a paginated list of users filtered by the provided criteria.
+     *
+     * @param pageable The pagination and sorting information.
+     * @param criteria The criteria used to filter the users.
+     * @return A {@link Page} of {@link User} entities matching the specified criteria.
+     */
     Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria);
+
+    /**
+     * Finds a user by email address, including their roles and associated permissions.
+     *
+     * @param email The email address of the user to find.
+     * @return The {@link User} entity with roles and permissions loaded.
+     */
     User findByEmailWithRolesAndPermissions(String email);
+
+    /**
+     * Retrieves a user by ID along with their roles.
+     *
+     * @param userId The ID of the user.
+     * @return The {@link User} entity with roles initialized.
+     */
     User getUserByIdWithRoles(String userId);
 }

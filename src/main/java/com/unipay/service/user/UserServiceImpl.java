@@ -10,8 +10,6 @@ import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.helper.UserRegistrationHelper;
 import com.unipay.models.MFASettings;
 import com.unipay.models.User;
-import com.unipay.models.UserProfile;
-import com.unipay.models.UserSettings;
 import com.unipay.repository.UserRepository;
 import com.unipay.service.mail.EmailService;
 import com.unipay.service.role.RoleService;
@@ -24,34 +22,28 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 /**
- * Implementation of the {@link UserService} interface that handles user registration logic.
- * This class coordinates the creation of a user and its related entities such as {@link UserProfile} and {@link UserSettings}.
+ * Service implementation for handling user registration, retrieval, and related logic.
  *
- * <p>Key Responsibilities:
+ * <p>This implementation manages user creation along with their profile, settings,
+ * MFA configuration, and initial role assignment. It ensures all processes occur
+ * within transactional boundaries and logs important lifecycle events.</p>
+ *
+ * <p>Main responsibilities:
  * <ul>
- *   <li>Validating the user registration command.</li>
- *   <li>Creating and saving the {@link User} entity.</li>
- *   <li>Creating associated {@link UserProfile} and {@link UserSettings} for the new user.</li>
- *   <li>Persisting the complete user structure within a transactional boundary.</li>
+ *   <li>Registering new users and initializing associated entities.</li>
+ *   <li>Assigning default roles and auditing the creation action.</li>
+ *   <li>Sending confirmation emails and managing MFA settings.</li>
+ *   <li>Querying user data by criteria or identity with role/permission enrichment.</li>
  * </ul>
  * </p>
  *
- * <p>Logging is used to trace the registration process and handle errors effectively.</p>
- *
- * @see com.unipay.command.UserRegisterCommand
- * @see com.unipay.models.User
- * @see com.unipay.models.UserProfile
- * @see com.unipay.models.UserSettings
- * @see com.unipay.service.user.UserService
+ * @see UserService
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -59,14 +51,13 @@ public class UserServiceImpl implements UserService {
     private final UserRegistrationHelper registrationHelper;
     private final EmailService emailService;
 
-
     /**
-     * Creates a new user along with their profile and settings based on the provided command.
-     * This method ensures that all related data is persisted atomically using a transactional context.
+     * Registers a new user by persisting their base account, MFA, profile, and settings.
+     * Also assigns the USER role and initiates email verification.
      *
-     * @param command The {@link UserRegisterCommand} containing the user, profile, and settings information.
-     * @param request The HTTP request containing the client’s IP address and user agent.
-     * @return The fully initialized and saved {@link User} entity.
+     * @param command The registration command with username, password, email, and profile data.
+     * @param request HTTP request used for logging the origin IP and user-agent.
+     * @return The newly created {@link User} with associated entities.
      */
     @Override
     @Transactional
@@ -85,36 +76,42 @@ public class UserServiceImpl implements UserService {
                 AuditLogAction.USER_CREATED.getAction(),
                 "User created: " + command.getUsername()
         );
+
         emailService.sendConfirmationEmail(user);
         user.setStatus(UserStatus.PENDING);
+
         return user;
     }
+
+    /**
+     * Initializes MFA settings for a newly registered user. By default, MFA is disabled.
+     *
+     * @param user The user for whom to configure MFA settings.
+     */
     private void initializeMfaSettings(User user) {
         MFASettings mfaSettings = new MFASettings();
         mfaSettings.setEnabled(false);
         mfaSettings.setUser(user);
         user.setMfaSettings(mfaSettings);
     }
+
+    /**
+     * Encodes the password and creates the user entity in the database.
+     *
+     * @param command The command containing user credentials.
+     * @return The persisted user entity.
+     */
     private User createUserEntity(UserRegisterCommand command) {
         User user = User.create(command);
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         return userRepository.saveAndFlush(user);
     }
 
-    @Override
-    public User findByEmailWithRolesAndPermissions(String email) {
-        log.info("Begin fetching user with email {}", email);
-        final User user =  userRepository.findByEmailWithRolesAndPermissions(email)
-                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
-        log.info("User with email {} fetched successfully", user.getEmail());
-        return user;
-    }
-
     /**
-     * Check if a user already exists by email or username.
+     * Validates if a user already exists with the same email or username.
+     * Throws a {@link BusinessException} if a conflict is found.
      *
-     * @param command The registration command containing the user's email and username.
-     * @throws IllegalArgumentException if the user exists.
+     * @param command The registration input.
      */
     private void checkIfUserExists(UserRegisterCommand command) {
         if (userRepository.existsByEmailOrUsername(command.getEmail(), command.getUsername())) {
@@ -122,52 +119,64 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ExceptionPayloadFactory.USER_ALREADY_EXIST.get());
         }
     }
+
     /**
-     * Retrieves a user by their ID.
+     * Retrieves a user entity by its unique identifier.
      *
-     * @param userId The unique identifier of the user.
-     * @return An {@link Optional} containing the user if found, or an empty {@link Optional} if no user is found.
+     * @param userId The user ID.
+     * @return The {@link User} found or throws if not found.
      */
     @Override
     @Transactional(readOnly = true)
     public User getUserById(String userId) {
-        log.debug("Begin fetching User with ID {}", userId);
-        final User user = userRepository.findById(userId).orElseThrow(
-                () -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get())
-        );
-        log.debug("User fetched successfully with ID {}", userId);
-        return user;
+        log.debug("Fetching user with ID {}", userId);
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
     }
+
     /**
-     * Retrieves a paginated list of {@link User} entities based on the specified filtering criteria.
+     * Retrieves a user and eagerly loads their roles and permissions.
      *
-     * <p>This method delegates to the {@link UserRepository} to fetch users matching the provided
-     * {@link UserCriteria} filters and paginates the result according to the given {@link Pageable} object.
-     * In case of any exceptions during the fetching process, a {@link BusinessException} is thrown
-     * with a technical error payload.</p>
+     * @param email The user's email address.
+     * @return The {@link User} with roles and permissions.
+     */
+    @Override
+    public User findByEmailWithRolesAndPermissions(String email) {
+        log.info("Fetching user by email: {}", email);
+        return userRepository.findByEmailWithRolesAndPermissions(email)
+                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+    }
+
+    /**
+     * Retrieves a paginated list of users based on filtering criteria.
      *
-     * @param pageable the pagination information, including page number, size, and sorting
-     * @param criteria the filtering criteria to apply when fetching users
-     * @return a page of users matching the specified criteria
-     * @throws BusinessException if an error occurs while fetching users from the repository
+     * @param pageable Pagination and sorting info.
+     * @param criteria Filters to apply.
+     * @return A paginated list of {@link User} entities.
      */
     @Override
     @Transactional(readOnly = true)
     public Page<User> getAllByCriteria(Pageable pageable, UserCriteria criteria) {
         try {
             Page<User> users = userRepository.getUsersByCriteria(pageable, criteria);
-            log.debug("User by criteria fetched successfully !!");
+            log.debug("Users fetched by criteria successfully.");
             return users;
         } catch (Exception e) {
             log.error("Error fetching users by criteria", e);
             throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), e);
         }
     }
+
+    /**
+     * Retrieves a user by ID and includes their roles.
+     *
+     * @param userId The ID of the user.
+     * @return The {@link User} with roles initialized.
+     */
     @Override
     @Transactional(readOnly = true)
     public User getUserByIdWithRoles(String userId) {
         return userRepository.findByIdWithRoles(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
     }
-
 }

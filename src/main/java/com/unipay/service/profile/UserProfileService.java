@@ -33,6 +33,11 @@ public interface UserProfileService {
      * @return A newly created {@link UserProfile} instance associated with the user.
      */
     UserProfile create(final ProfileCommand profileCommand, User user);
+    /**
+     * Adds a new address using the provided command data.
+     *
+     * @param addressCommand The command object containing the details required to create the address.
+     */
     void addAddress(final CreateAddressCommand addressCommand);
 
 }

@@ -7,6 +7,7 @@ import com.unipay.command.UserRegisterCommand;
 import com.unipay.dto.CurrentUser;
 import com.unipay.mapper.UserMapper;
 import com.unipay.models.User;
+import com.unipay.response.EmailConfirmationResponse;
 import com.unipay.response.LoginResponse;
 import com.unipay.response.UserRegistrationResponse;
 import com.unipay.service.authentication.AuthenticationService;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -138,9 +140,9 @@ public class AuthController {
             description = "Verifies a user's email using the confirmation token sent via email"
     )
     @PostMapping(CONFIRM)
-    public String confirmRegistration(@RequestParam("code") String confirmationCode) {
-        emailService.confirmRegistration(confirmationCode);
-        return "Email confirmed successfully.";
+    public ResponseEntity<EmailConfirmationResponse> confirmRegistration(@RequestParam("code") String confirmationCode) {
+        final EmailConfirmationResponse confirmationResponse = emailService.confirmRegistration(confirmationCode);
+        return ResponseEntity.ok(confirmationResponse);
     }
 
     @Operation(
@@ -152,4 +154,18 @@ public class AuthController {
         final User user = authenticationService.getCurrentUser();
         return ResponseEntity.ok(userMapper.toUser(user));
     }
+    @Operation(
+            summary = "Forgot Password",
+            description = "Initiates password reset process and sends reset email",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Password reset email sent"),
+                    @ApiResponse(responseCode = "404", description = "User not found")
+            }
+    )
+    @PostMapping(FORGOT_PASSWORD)
+    public ResponseEntity<Void> forgotPassword(@RequestParam("email") String email, HttpServletRequest request) {
+        authenticationService.forgotPassword(email, request);
+        return ResponseEntity.ok().build();
+    }
+
 }

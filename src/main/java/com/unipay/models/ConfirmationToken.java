@@ -3,9 +3,13 @@ package com.unipay.models;
 import com.unipay.constants.Constants;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.security.SecureRandom;
+import java.util.Calendar;
 import java.util.Date;
+
+import static com.unipay.constants.Constants.EXPIRATION_MINUTES;
 
 
 @Getter
@@ -16,9 +20,11 @@ import java.util.Date;
 public class ConfirmationToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "TOKEN_ID")
-    private Long tokenId;
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @Column(name = "ID")
+    @EqualsAndHashCode.Include
+    protected String id;
 
     @Column(name = "CONFIRMATION_TOKEN")
     private String confirmationToken;
@@ -51,5 +57,11 @@ public class ConfirmationToken {
             }
         }
         return code.toString();
+    }
+    public boolean isExpired() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(createdDate);
+        calendar.add(Calendar.MINUTE, EXPIRATION_MINUTES);
+        return new Date().after(calendar.getTime());
     }
 }

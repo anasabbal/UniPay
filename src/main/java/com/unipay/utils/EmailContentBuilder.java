@@ -57,4 +57,45 @@ public class EmailContentBuilder {
 
         return emailContent.toString();
     }
+    public String buildPasswordResetEmailContent(User user, String token) {
+        StringBuilder emailContent = new StringBuilder();
+
+        emailContent.append("<!DOCTYPE html>")
+                .append("<html lang=\"en\">")
+                .append("<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
+                .append("<title>Password Reset</title></head>")
+                .append("<body style=\"margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;\">")
+                .append("<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">")
+                .append("<tr><td align=\"center\" style=\"padding: 40px 0;\"><table width=\"600\" style=\"border: 1px solid #eaeaea; border-radius: 8px; padding: 40px;\">")
+
+                .append("<tr><td align=\"center\">")
+                .append("<img src=\"https://i.ibb.co/gFvQfqpt/Chat-GPT-Image-Apr-29-2025-02-55-42-PM.png\" alt=\"")
+                .append(appName).append(" Logo\" width=\"120\" style=\"margin-bottom: 24px;\">")
+                .append("<h1 style=\"color: #1a1a1a; margin: 0 0 24px 0;\">Reset Your Password</h1></td></tr>")
+
+                .append("<tr><td style=\"padding: 24px 0; border-top: 1px solid #eaeaea;\">")
+                .append("<p style=\"color: #666666; margin: 0 0 24px 0; line-height: 1.6;\">")
+                .append("Hi ").append(user.getUsername()).append(",<br><br>")
+                .append("We received a request to reset your password for your ").append(appName)
+                .append(" account. Please use the following code to reset your password:</p>")
+
+                .append("<div style=\"background: #f8f9fa; padding: 16px; border-radius: 6px; text-align: center; margin: 24px 0;\">")
+                .append("<code style=\"font-size: 24px; letter-spacing: 2px; color: #2d3748; font-weight: bold;\">")
+                .append(token).append("</code></div>")
+
+                .append("<p style=\"color: #666666; margin: 24px 0; line-height: 1.6;\">")
+                .append("This code will expire in 24 hours. If you didn't request a password reset, you can safely ignore this email.</p></td></tr>")
+
+                .append("<tr><td style=\"padding-top: 24px; border-top: 1px solid #eaeaea;\">")
+                .append("<p style=\"color: #999999; font-size: 12px; line-height: 1.6; margin: 0;\">")
+                .append("Need help? Contact our support team at <a href=\"mailto:")
+                .append(supportEmail).append("\" style=\"color: #4299e1; text-decoration: none;\">")
+                .append(supportEmail).append("</a><br>")
+                .append("© ").append(LocalDate.now().getYear()).append(" ").append(appName).append(". All rights reserved.</p></td></tr>")
+
+                .append("</table></td></tr></table></body></html>");
+
+        return emailContent.toString();
+    }
+
 }

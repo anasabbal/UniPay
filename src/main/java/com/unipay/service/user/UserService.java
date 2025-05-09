@@ -2,6 +2,7 @@ package com.unipay.service.user;
 
 import com.unipay.command.UserRegisterCommand;
 import com.unipay.criteria.UserCriteria;
+import com.unipay.exception.BusinessException;
 import com.unipay.models.User;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
@@ -73,4 +74,14 @@ public interface UserService {
      * @return The {@link User} entity with roles initialized.
      */
     User getUserByIdWithRoles(String userId);
+    /**
+     * Initiates the "forgot password" workflow:
+     *  1. Finds the user by email.
+     *  2. Generates and saves a new confirmation token.
+     *  3. Sends a password reset email containing that token.
+     *
+     * @param email the email address to send the reset link to
+     * @throws BusinessException if the user is not found or email sending fails
+     */
+    void forgotPassword(String email);
 }

@@ -54,4 +54,5 @@ public interface AuthenticationService {
      * @return The login response containing the new tokens and user roles.
      */
     LoginResponse refreshToken(String refreshToken, HttpServletRequest request);
+    void forgotPassword(String email, HttpServletRequest request);
 }

@@ -8,6 +8,7 @@ import com.unipay.models.ConfirmationToken;
 import com.unipay.models.User;
 import com.unipay.repository.ConfirmationTokenRepository;
 import com.unipay.repository.UserRepository;
+import com.unipay.response.EmailConfirmationResponse;
 import com.unipay.utils.EmailContentBuilder;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -57,10 +60,18 @@ public class EmailServiceImp implements EmailService{
      */
     @Override
     @Transactional
-    public void confirmRegistration(String confirmationCode) {
+    public EmailConfirmationResponse confirmRegistration(String confirmationCode) {
         log.info("Verifying confirmation code...");
 
         ConfirmationToken token = getTokenByCode(confirmationCode);
+
+        if (token == null || token.isExpired()) {
+            return new EmailConfirmationResponse(
+                    "ERROR",
+                    "INVALID_TOKEN",
+                    "Verification token is invalid or expired"
+            );
+        }
 
         User user = userRepository.findByEmail(token.getUser().getEmail())
                 .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
@@ -68,7 +79,11 @@ public class EmailServiceImp implements EmailService{
         user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
 
-        log.info("Email {} verified and status set to PENDING.", user.getEmail());
+        log.info("Email {} verified and status set to ACTIVE.", user.getEmail());
+        return new EmailConfirmationResponse(
+                "SUCCESS",
+                "Email verified successfully"
+        );
     }
 
     private ConfirmationToken getTokenByCode(String code) {
@@ -77,5 +92,29 @@ public class EmailServiceImp implements EmailService{
 
         log.info("Confirmation token fetched");
         return token;
+    }
+    @Async
+    @Override
+    @Transactional
+    public void sendPasswordResetEmail(User user, String tokenValue) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(user.getEmail());
+            helper.setSubject("Reset Your Password");
+            helper.setText(
+                    emailContentBuilder.buildPasswordResetEmailContent(user, tokenValue),
+                    true
+            );
+
+            mailSender.send(message);
+            log.info("Password reset email sent to {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send password reset email", e);
+            throw new BusinessException(
+                    ExceptionPayloadFactory.FAILED_TO_SEND_EMAIL.get()
+            );
+        }
     }
 }

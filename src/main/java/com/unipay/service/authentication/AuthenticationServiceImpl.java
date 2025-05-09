@@ -107,6 +107,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return LoginResponse.error();
     }
     /**
+     * Initiates password reset workflow by delegating to UserService.
+     *
+     * @param email the email address of the user requesting reset
+     * @param request the HTTP request for logging purposes
+     */
+    @Override
+    @Auditable(action = "PASSWORD_RESET_REQUEST")
+    @Transactional
+    public void forgotPassword(String email, HttpServletRequest request) {
+        log.info("Forgot password requested for [{}]", email);
+        // Delegate to UserService which handles token creation, persistence, and email dispatch
+        userService.forgotPassword(email);
+        // Record audit log
+        auditLogService.createAuditLog(
+                userService.findByEmailWithRolesAndPermissions(email),
+                AuditLogAction.PASSWORD_RESET_REQUEST.getAction(),
+                "Password reset requested"
+        );
+    }
+    /**
      * Verifies the MFA code and finalizes the user authentication process.
      *
      * @param challengeToken The MFA challenge token.

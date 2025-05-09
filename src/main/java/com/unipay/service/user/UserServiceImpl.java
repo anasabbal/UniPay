@@ -8,8 +8,10 @@ import com.unipay.enums.UserStatus;
 import com.unipay.exception.BusinessException;
 import com.unipay.exception.ExceptionPayloadFactory;
 import com.unipay.helper.UserRegistrationHelper;
+import com.unipay.models.ConfirmationToken;
 import com.unipay.models.MFASettings;
 import com.unipay.models.User;
+import com.unipay.repository.ConfirmationTokenRepository;
 import com.unipay.repository.UserRepository;
 import com.unipay.service.mail.EmailService;
 import com.unipay.service.role.RoleService;
@@ -48,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRegistrationHelper registrationHelper;
     private final EmailService emailService;
 
@@ -178,5 +181,46 @@ public class UserServiceImpl implements UserService {
     public User getUserByIdWithRoles(String userId) {
         return userRepository.findByIdWithRoles(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+    }
+
+    /**
+     * Initiates the "forgot password" workflow:
+     *  1. Finds the user by email.
+     *  2. Generates and saves a new confirmation token.
+     *  3. Sends a password reset email containing that token.
+     *
+     * @param email the email address to send the reset link to
+     * @throws BusinessException if the user is not found or email sending fails
+     */
+    @Transactional
+    public void forgotPassword(String email) {
+        log.info("Initiating forgot-password workflow for [{}]", email);
+        try {
+            // 1. Load user (or throw USER_NOT_FOUND)
+            User user = findByEmail(email);
+
+            // 2. Generate & persist token
+            ConfirmationToken token = ConfirmationToken.create(user);
+            confirmationTokenRepository.save(token);
+            log.debug("Generated ConfirmationToken [{}] for user [{}]", token.getConfirmationToken(), email);
+
+            // 3. Dispatch reset email
+            emailService.sendPasswordResetEmail(user, token.getConfirmationToken());
+            log.info("Password reset email dispatched to [{}]", email);
+
+        } catch (BusinessException be) {
+            // Propagate known business exceptions unchanged
+            throw be;
+        } catch (Exception ex) {
+            log.error("Error in forgotPassword for [{}]", email, ex);
+            // Wrap any other exception
+            throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), ex);
+        }
+    }
+
+    private User findByEmail(String email){
+        return userRepository.findByEmail(email).orElseThrow(
+                () -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get())
+        );
     }
 }

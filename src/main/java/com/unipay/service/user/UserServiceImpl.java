@@ -196,24 +196,19 @@ public class UserServiceImpl implements UserService {
     public void forgotPassword(String email) {
         log.info("Initiating forgot-password workflow for [{}]", email);
         try {
-            // 1. Load user (or throw USER_NOT_FOUND)
             User user = findByEmail(email);
 
-            // 2. Generate & persist token
             ConfirmationToken token = ConfirmationToken.create(user);
             confirmationTokenRepository.save(token);
             log.debug("Generated ConfirmationToken [{}] for user [{}]", token.getConfirmationToken(), email);
 
-            // 3. Dispatch reset email
             emailService.sendPasswordResetEmail(user, token.getConfirmationToken());
             log.info("Password reset email dispatched to [{}]", email);
 
         } catch (BusinessException be) {
-            // Propagate known business exceptions unchanged
             throw be;
         } catch (Exception ex) {
             log.error("Error in forgotPassword for [{}]", email, ex);
-            // Wrap any other exception
             throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), ex);
         }
     }

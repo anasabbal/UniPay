@@ -167,5 +167,4 @@ public class AuthController {
         authenticationService.forgotPassword(email, request);
         return ResponseEntity.ok().build();
     }
-
 }

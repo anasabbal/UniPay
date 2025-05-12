@@ -24,6 +24,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 /**
  * Service implementation for handling user registration, retrieval, and related logic.
  *
@@ -212,10 +214,15 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), ex);
         }
     }
-
-    private User findByEmail(String email){
+    @Override
+    public User findByEmail(String email){
         return userRepository.findByEmail(email).orElseThrow(
                 () -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get())
         );
+    }
+
+    @Override
+    public Optional<User> findByEmailWithOptional(String email) {
+        return userRepository.findByEmail(email);
     }
 }

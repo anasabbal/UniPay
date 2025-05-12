@@ -18,15 +18,15 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
+import static com.unipay.constants.ResourcePaths.BUSINESSES;
 import static com.unipay.constants.ResourcePaths.V1;
 
 /**
  * REST controller for managing Business entities.
  */
 @RestController
-@RequestMapping(V1 + "/businesses")
+@RequestMapping(V1 + BUSINESSES)
 @RequiredArgsConstructor
-@Tag(name = "Business", description = "Operations related to Business entity management")
 public class BusinessController {
 
     private final BusinessService businessService;

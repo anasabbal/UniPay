@@ -46,7 +46,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtService jwtService;
     private final MFAService mfaService;
     private final UserService userService;
-    private final UserRepository userRepository;
     private final AuditLogService auditLogService;
     private final UserSessionService userSessionService;
     private final LoginHistoryService loginHistoryService;
@@ -146,8 +145,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // Extract user from challenge token
             String email = jwtService.extractUsername(challengeToken);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+            User user = userService.findByEmail(email);
 
             // Validate MFA code
             if (!mfaService.validateCode(user, code)) {
@@ -238,8 +236,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
     private User getAuthenticatedUser(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+        return userService.findByEmail(userDetails.getUsername());
     }
     private void validateUserStatus(User user) {
         if (user.getStatus() != UserStatus.ACTIVE) {
@@ -264,7 +261,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
     private void handleAuthenticationFailure(String email, HttpServletRequest request,
                                              String reason, ExceptionPayloadFactory payload) {
-        userRepository.findByEmail(email).ifPresent(user -> {
+        userService.findByEmailWithOptional(email).ifPresent(user -> {
             loginHistoryService.createLoginHistory(user, request, false);
             auditLogService.createAuditLog(user,
                     AuditLogAction.LOGIN_FAILED.getAction(),

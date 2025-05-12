@@ -15,11 +15,9 @@ import java.util.Map;
 @Service
 public class StripeGateway {
 
-    @Value("${stripe.secret-key}")
-    private String stripeSecretKey;
 
     public void charge(PaymentRequest request) {
-        Stripe.apiKey = stripeSecretKey;
+        //Stripe.apiKey = stripeSecretKey;
 
         Map<String, Object> params = new HashMap<>();
         params.put("amount", request.amount().multiply(BigDecimal.valueOf(100)).intValue());

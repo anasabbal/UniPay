@@ -13,4 +13,5 @@ public class ResourcePaths {
     public static final String PROFILE = "/profile";
     public static final String ADDRESS = "/address";
     public static final String FORGOT_PASSWORD = "/forgot-password";
+    public static final String BUSINESSES = "/businesses";
 }

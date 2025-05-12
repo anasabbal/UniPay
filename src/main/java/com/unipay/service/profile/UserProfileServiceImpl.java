@@ -12,6 +12,8 @@ import com.unipay.repository.UserProfileRepository;
 import com.unipay.service.authentication.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserProfileServiceImpl implements UserProfileService {
 
     /**
@@ -49,6 +50,18 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final AuthenticationService authenticationService;
     private final AddressRepository addressRepository;
     private final UserProfileRepository userProfileRepository;
+
+
+    @Autowired
+    public UserProfileServiceImpl(
+            @Lazy AuthenticationService authenticationService,
+            AddressRepository addressRepository,
+            UserProfileRepository userProfileRepository
+    ) {
+        this.authenticationService = authenticationService;
+        this.addressRepository = addressRepository;
+        this.userProfileRepository = userProfileRepository;
+    }
 
     /**
      * {@inheritDoc}

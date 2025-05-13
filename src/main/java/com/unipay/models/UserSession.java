@@ -22,7 +22,8 @@ public class UserSession extends BaseEntity{
     private String ipAddress;
     private String userAgent;
     private Instant expiresAt;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
-    private boolean valid;
 }

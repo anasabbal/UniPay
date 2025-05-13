@@ -55,4 +55,5 @@ public interface AuthenticationService {
      */
     LoginResponse refreshToken(String refreshToken, HttpServletRequest request);
     void forgotPassword(String email, HttpServletRequest request);
+    void logout(HttpServletRequest request);
 }

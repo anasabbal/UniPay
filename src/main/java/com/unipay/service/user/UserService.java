@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Optional;
+
 /**
  * Service interface for managing core user operations within the system.
  *
@@ -84,4 +86,8 @@ public interface UserService {
      * @throws BusinessException if the user is not found or email sending fails
      */
     void forgotPassword(String email);
+    User findByEmail(String email);
+    Optional<User> findByEmailWithOptional(String email);
+    void changePassword(User user, String newPassword);
+    void deactivateUser(String userId);
 }

@@ -13,8 +13,10 @@ import com.unipay.models.MFASettings;
 import com.unipay.models.User;
 import com.unipay.repository.ConfirmationTokenRepository;
 import com.unipay.repository.UserRepository;
+import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.mail.EmailService;
 import com.unipay.service.role.RoleService;
+import com.unipay.service.session.UserSessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * Service implementation for handling user registration, retrieval, and related logic.
@@ -50,6 +54,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final AuditLogService auditLogService;
+    private final UserSessionService userSessionService;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRegistrationHelper registrationHelper;
     private final EmailService emailService;
@@ -212,10 +218,39 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ExceptionPayloadFactory.TECHNICAL_ERROR.get(), ex);
         }
     }
-
-    private User findByEmail(String email){
+    @Override
+    public User findByEmail(String email){
         return userRepository.findByEmail(email).orElseThrow(
                 () -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get())
+        );
+    }
+
+    @Override
+    public Optional<User> findByEmailWithOptional(String email) {
+        return userRepository.findByEmail(email);
+    }
+    @Override
+    @Transactional
+    public void changePassword(User user, String newPassword) {
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userSessionService.revokeAllSessions(user);
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.PASSWORD_CHANGED.getAction(),
+                "Password changed - sessions revoked"
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUser(String userId) {
+        User user = getUserById(userId);
+        user.setStatus(UserStatus.INACTIVE);
+        userSessionService.revokeAllSessions(user);
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.ACCOUNT_LOCKED.getAction(),
+                "Account deactivated - sessions revoked"
         );
     }
 }

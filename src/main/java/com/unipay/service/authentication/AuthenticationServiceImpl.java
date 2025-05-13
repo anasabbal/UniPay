@@ -46,7 +46,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtService jwtService;
     private final MFAService mfaService;
     private final UserService userService;
-    private final UserRepository userRepository;
     private final AuditLogService auditLogService;
     private final UserSessionService userSessionService;
     private final LoginHistoryService loginHistoryService;
@@ -146,8 +145,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // Extract user from challenge token
             String email = jwtService.extractUsername(challengeToken);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+            User user = userService.findByEmail(email);
 
             // Validate MFA code
             if (!mfaService.validateCode(user, code)) {
@@ -228,6 +226,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.getSessions().add(session);
         return session;
     }
+    @Override
+    @Transactional
+    @Auditable(action = "USER_LOGOUT")
+    public void logout(HttpServletRequest request) {
+        String token = extractTokenFromRequest(request);
+
+        String sessionId = jwtService.extractSessionId(token);
+
+        userSessionService.invalidateSession(sessionId);
+        User user = getCurrentUser();
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.LOGOUT.getAction(),
+                "User logged out"
+        );
+    }
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BusinessException(ExceptionPayloadFactory.INVALID_TOKEN.get());
+        }
+        return authHeader.substring(7); // Remove "Bearer " prefix
+    }
     private Authentication attemptAuthentication(LoginCommand command) {
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -238,8 +259,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
     private User getAuthenticatedUser(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new BusinessException(ExceptionPayloadFactory.USER_NOT_FOUND.get()));
+        return userService.findByEmail(userDetails.getUsername());
     }
     private void validateUserStatus(User user) {
         if (user.getStatus() != UserStatus.ACTIVE) {
@@ -264,7 +284,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
     private void handleAuthenticationFailure(String email, HttpServletRequest request,
                                              String reason, ExceptionPayloadFactory payload) {
-        userRepository.findByEmail(email).ifPresent(user -> {
+        userService.findByEmailWithOptional(email).ifPresent(user -> {
             loginHistoryService.createLoginHistory(user, request, false);
             auditLogService.createAuditLog(user,
                     AuditLogAction.LOGIN_FAILED.getAction(),

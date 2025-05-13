@@ -1,5 +1,7 @@
 package com.unipay.utils;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.unipay.payload.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -16,6 +18,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,11 @@ public class JwtService {
 
     private static final String TOKEN_TYPE = "JWT";
     private static final String TOKEN_ISSUER = "Unipay-Auth-Service";
+
+    private final Cache<String, Boolean> tokenBlacklist =
+            CacheBuilder.newBuilder()
+                    .expireAfterWrite(5, TimeUnit.MINUTES)
+                    .build();
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -36,6 +44,19 @@ public class JwtService {
 
     @Value("${jwt.mfa-challenge-expiration}")
     private long mfaChallengeExpiration;
+
+    public void blacklistToken(String token) {
+        tokenBlacklist.put(token, true);
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        return tokenBlacklist.getIfPresent(token) != null;
+    }
+
+    // Add this to token validation logic
+    public boolean validateToken(String token) {
+        return !isTokenBlacklisted(token);
+    }
 
     public JwtTokenPair generateTokenPair(UserDetailsImpl userDetails, String sessionId) {
         String accessToken = buildAccessToken(userDetails, sessionId);

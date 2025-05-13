@@ -13,8 +13,10 @@ import com.unipay.models.MFASettings;
 import com.unipay.models.User;
 import com.unipay.repository.ConfirmationTokenRepository;
 import com.unipay.repository.UserRepository;
+import com.unipay.service.audit_log.AuditLogService;
 import com.unipay.service.mail.EmailService;
 import com.unipay.service.role.RoleService;
+import com.unipay.service.session.UserSessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+    private final AuditLogService auditLogService;
+    private final UserSessionService userSessionService;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRegistrationHelper registrationHelper;
     private final EmailService emailService;
@@ -224,5 +228,29 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByEmailWithOptional(String email) {
         return userRepository.findByEmail(email);
+    }
+    @Override
+    @Transactional
+    public void changePassword(User user, String newPassword) {
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userSessionService.revokeAllSessions(user);
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.PASSWORD_CHANGED.getAction(),
+                "Password changed - sessions revoked"
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUser(String userId) {
+        User user = getUserById(userId);
+        user.setStatus(UserStatus.INACTIVE);
+        userSessionService.revokeAllSessions(user);
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.ACCOUNT_LOCKED.getAction(),
+                "Account deactivated - sessions revoked"
+        );
     }
 }

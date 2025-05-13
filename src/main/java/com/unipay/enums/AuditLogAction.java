@@ -15,7 +15,8 @@ public enum AuditLogAction {
     SETTINGS_UPDATED("Settings Updated"),
     ACCOUNT_LOCKED("Account Locked"),
     PASSWORD_RESET_REQUEST("Password Reset Requested"),
-    ACCOUNT_UNLOCKED("Account Unlocked");
+    ACCOUNT_UNLOCKED("Account Unlocked"),
+    LOGOUT("User Logged Out");
 
     private final String action;
 

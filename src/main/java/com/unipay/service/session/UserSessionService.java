@@ -33,4 +33,5 @@ public interface UserSessionService {
      * @return A new {@link UserSession} instance representing the created session.
      */
     UserSession createSession(User user, String userAgent, String ipAddress);
+    void revokeAllSessions(User user);
 }

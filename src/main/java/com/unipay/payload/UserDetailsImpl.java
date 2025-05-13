@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -95,7 +96,11 @@ public class UserDetailsImpl implements UserDetails {
     // Add session awareness
     public boolean isSessionValid(String sessionId) {
         return user.getSessions().stream()
-                .anyMatch(s -> s.getId().equals(sessionId) && s.isValid());
+                .anyMatch(s ->
+                        s.getId().equals(sessionId) &&
+                                !s.isRevoked() &&
+                                s.getExpiresAt().isAfter(Instant.now())
+                );
     }
 }
 

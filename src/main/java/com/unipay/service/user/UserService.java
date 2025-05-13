@@ -88,4 +88,6 @@ public interface UserService {
     void forgotPassword(String email);
     User findByEmail(String email);
     Optional<User> findByEmailWithOptional(String email);
+    void changePassword(User user, String newPassword);
+    void deactivateUser(String userId);
 }

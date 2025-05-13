@@ -3,6 +3,7 @@ package com.unipay.service.session;
 import com.unipay.models.User;
 import com.unipay.models.UserSession;
 import com.unipay.repository.UserSessionRepository;
+import com.unipay.utils.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class UserSessionServiceImpl implements UserSessionService {
 
+
+    private final JwtService jwtService;
     private final UserSessionRepository sessionRepository;
 
     /**
@@ -47,15 +50,6 @@ public class UserSessionServiceImpl implements UserSessionService {
         sessionRepository.deleteById(sessionId);
     }
 
-    /**
-     * Revokes all active sessions for the given user by removing them from the repository.
-     *
-     * @param user The user whose sessions are to be revoked.
-     */
-    @Transactional
-    public void revokeAllSessions(User user) {
-        sessionRepository.deleteByUser(user);
-    }
 
     /**
      * {@inheritDoc}
@@ -77,10 +71,24 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     @Transactional
     public void invalidateSession(String sessionId) {
-        sessionRepository.findById(sessionId)
-                .ifPresent(session -> {
-                    session.setRevoked(true);
-                    sessionRepository.save(session);
-                });
+        sessionRepository.findById(sessionId).ifPresent(session -> {
+            session.setRevoked(true);
+            sessionRepository.save(session);
+            jwtService.blacklistToken(sessionId);
+        });
+    }
+    /**
+     * Revokes all active sessions for the given user by removing them from the repository.
+     *
+     * @param user The user whose sessions are to be revoked.
+     */
+    @Override
+    @Transactional
+    public void revokeAllSessions(User user) {
+        sessionRepository.findByUser(user).forEach(session -> {
+            session.setRevoked(true);
+            sessionRepository.save(session);
+            jwtService.blacklistToken(session.getId());
+        });
     }
 }

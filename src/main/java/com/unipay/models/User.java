@@ -182,8 +182,4 @@ public class User extends BaseEntity {
         this.auditLogs.add(auditLog);
         auditLog.setUser(this);
     }
-    public boolean isSessionValid(String sessionId) {
-        return sessions.stream()
-                .anyMatch(s -> s.getId().equals(sessionId) && s.isValid());
-    }
 }

@@ -226,6 +226,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.getSessions().add(session);
         return session;
     }
+    @Override
+    @Transactional
+    @Auditable(action = "USER_LOGOUT")
+    public void logout(HttpServletRequest request) {
+        String token = extractTokenFromRequest(request);
+
+        String sessionId = jwtService.extractSessionId(token);
+
+        userSessionService.invalidateSession(sessionId);
+        User user = getCurrentUser();
+        auditLogService.createAuditLog(
+                user,
+                AuditLogAction.LOGOUT.getAction(),
+                "User logged out"
+        );
+    }
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BusinessException(ExceptionPayloadFactory.INVALID_TOKEN.get());
+        }
+        return authHeader.substring(7); // Remove "Bearer " prefix
+    }
     private Authentication attemptAuthentication(LoginCommand command) {
         return authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

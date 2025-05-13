@@ -2,7 +2,8 @@ package com.unipay.enums;
 
 
 public enum UserStatus {
-    PENDING,        // awaiting email verification
+    PENDING,        // awaiting email verification,
+    INACTIVE,
     ACTIVE,         // fully active user
     SUSPENDED,      // temporarily disabled due to policy violations
     DEACTIVATED,    // user-initiated deactivation

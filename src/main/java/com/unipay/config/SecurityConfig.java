@@ -41,15 +41,23 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                mvc.pattern("/v1/auth/**"),
-                                mvc.pattern("/swagger-ui/**"),
-                                mvc.pattern("/v3/api-docs/**")
-                        ).permitAll()
-                        .requestMatchers(mvc.pattern("/v1/users/{userId}/mfa/**"))
-                        .access(userIdAuthorizationManager)
+                        // Permit only the confirm email endpoint
+                        .requestMatchers(mvc.pattern("/v1/auth/confirm")).permitAll()
+
+                        // Permit other public endpoints like login/register
+                        .requestMatchers(mvc.pattern("/v1/auth/login")).permitAll()
+                        .requestMatchers(mvc.pattern("/v1/auth/register")).permitAll()
+
+                        // Permit swagger
+                        .requestMatchers(mvc.pattern("/swagger-ui/**"), mvc.pattern("/v3/api-docs/**")).permitAll()
+
+                        // Protect MFA routes
+                        .requestMatchers(mvc.pattern("/v1/users/{userId}/mfa/**")).access(userIdAuthorizationManager)
+
+                        // Everything else requires auth
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(sessionValidationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -57,7 +65,6 @@ public class SecurityConfig {
                 )
                 .build();
     }
-    // configure CORS if needed (example for handling front-end and back-end communication)
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(

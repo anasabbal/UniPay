@@ -2,15 +2,18 @@ package com.unipay.models;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 
 
-@Setter
+
 @Getter
+@Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "user_sessions", indexes = {
         @Index(name = "idx_session_expiry", columnList = "expiresAt"),
         @Index(name = "idx_session_revoked", columnList = "revoked")

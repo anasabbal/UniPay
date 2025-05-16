@@ -34,4 +34,5 @@ public interface UserSessionService {
      */
     UserSession createSession(User user, String userAgent, String ipAddress);
     void revokeAllSessions(User user);
+    void revokeSession(String sessionId);
 }
